@@ -176,7 +176,73 @@ func TestNoteRepository(t *testing.T) {
 
 func TestCascadingDelete(t *testing.T) {
 	db := prepareDatabase(t)
-	//ctx := context.Background()
+	ctx := context.Background()
+
+	userRepo := UserRepository{db: db}
+	noteRepo := NoteRepository{db: db}
+
+	// Create User
+	user := models.User{Username: "Alice", Password: "pwd"}
+	err := userRepo.CreateUser(ctx, &user)
+
+	assert.NoError(t, err)
+	assert.NotEqual(t, user.ID, int64(0))
+
+	// Create notes
+	note1 := models.Note{Title: "Title1", Body: "body1", UserID: user.ID, User: user}
+	note2 := models.Note{Title: "Title2", Body: "body2", UserID: user.ID, User: user}
+	err = noteRepo.CreateNote(ctx, &note1)
+	assert.NoError(t, err)
+	err = noteRepo.CreateNote(ctx, &note2)
+	assert.NoError(t, err)
+
+	id1 := note1.ID
+	id2 := note2.ID
+	user_id := user.ID
+
+	// Delete user by id
+	count, err := userRepo.deleteUserById(ctx, user.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, count)
+
+	_, err = userRepo.findUserById(ctx, user_id)
+	assert.Error(t, err)
+
+	// Assert that notes cannot be found after delete
+	_, err = noteRepo.findNoteById(ctx, id1)
+	assert.Error(t, err)
+
+	_, err = noteRepo.findNoteById(ctx, id2)
+	assert.Error(t, err)
+
+	// Recreate User
+	user = models.User{Username: "Alice", Password: "pwd"}
+	err = userRepo.CreateUser(ctx, &user)
+
+	assert.NoError(t, err)
+	assert.NotEqual(t, user.ID, int64(0))
+
+	// Create notes
+	note1 = models.Note{Title: "Title1", Body: "body1", UserID: user.ID, User: user}
+	note2 = models.Note{Title: "Title2", Body: "body2", UserID: user.ID, User: user}
+	err = noteRepo.CreateNote(ctx, &note1)
+	assert.NoError(t, err)
+	err = noteRepo.CreateNote(ctx, &note2)
+	assert.NoError(t, err)
+
+	id1 = note1.ID
+	id2 = note2.ID
+
+	// Delete user by id
+	err = userRepo.deleteUser(ctx, &user)
+	assert.NoError(t, err)
+
+	// Assert that notes cannot be found after delete
+	_, err = noteRepo.findNoteById(ctx, id1)
+	assert.Error(t, err)
+
+	_, err = noteRepo.findNoteById(ctx, id2)
+	assert.Error(t, err)
 
 	sqlDB, err := db.DB()
 	if err != nil {

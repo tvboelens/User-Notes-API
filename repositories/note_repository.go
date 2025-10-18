@@ -11,8 +11,6 @@ type NoteRepository struct {
 }
 
 func (r *NoteRepository) CreateNote(ctx context.Context, note *models.Note) error {
-	//result := gorm.WithResult()
-	//err := gorm.G[models.Note](r.db, result).Omit("User"). .Create(ctx, note)
 	tx := r.db.WithContext(ctx).Omit("User").Create(note)
 
 	if tx.Error == nil && tx.RowsAffected != 1 {
