@@ -1,6 +1,7 @@
 on:
   pull_request:
-
+  push:
+    branches: [main]
 jobs:
   run_tests:
     runs-on: golang:tip-alpine3.22
