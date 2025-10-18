@@ -7,4 +7,5 @@ type Note struct {
 	Title  string `gorm:"not null"`
 	Body   string
 	UserID uint `gorm:"not null"`
+	User   User `gorm:"foreignKey:UserID;references:ID"`
 }
