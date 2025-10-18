@@ -76,18 +76,111 @@ func TestUserRepository(t *testing.T) {
 
 	// Update user
 	// Delete user via Id
+	id = user.ID
+	count, err := userRepo.deleteUserById(ctx, id)
+	assert.NoError(t, err)
+	assert.Equal(t, 0, count)
+
+	_, err = userRepo.findUserById(ctx, id)
+	assert.Error(t, err)
 	// Delete user via User object
+	id = user2.ID
+	err = userRepo.deleteUser(ctx, &user2)
+	assert.NoError(t, err)
+
+	_, err = userRepo.findUserById(ctx, id)
+	assert.Error(t, err)
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sqlDB.Close()
 
 }
 
 func TestNoteRepository(t *testing.T) {
+	db := prepareDatabase(t)
+	ctx := context.Background()
+
+	userRepo := UserRepository{db: db}
+	noteRepo := NoteRepository{db: db}
+
+	// Create User
+	user := models.User{Username: "Alice", Password: "pwd"}
+	user_not_in_db := models.User{Username: "Bob", Password: "pwd"}
+	err := userRepo.CreateUser(ctx, &user)
+
+	assert.NoError(t, err)
+	assert.NotEqual(t, user.ID, int64(0))
+
+	// Create note
+	note1 := models.Note{Title: "Title1", Body: "body1", UserID: user.ID, User: user}
+	note2 := models.Note{Title: "Title2", Body: "body2"}
+	err = noteRepo.CreateNote(ctx, &note1)
+	assert.NoError(t, err)
+
+	// Assert that note cannot be created if the owner is not in DB
+	_, err = userRepo.findUserById(ctx, user_not_in_db.ID)
+	assert.Error(t, err)
+	_, err = userRepo.findUserByName(ctx, "Bob")
+	assert.Error(t, err)
+
+	err = noteRepo.CreateNote(ctx, &note2)
+	assert.Error(t, err)
+	note2.UserID = user_not_in_db.ID
+	note2.User = user_not_in_db
+	err = noteRepo.CreateNote(ctx, &note2)
+	assert.Error(t, err)
+
 	// Find by Id
-	// Create via Note object
+	note_read, err := noteRepo.findNoteById(ctx, note1.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, note1.ID, note_read.ID)
+	assert.Equal(t, "Title1", note_read.Title)
+	assert.Equal(t, "body1", note_read.Body)
+	assert.Equal(t, note1.UserID, note_read.UserID)
+	// Find all notes by one user
+	// Find by list of Ids?
+
 	// Update
 	// Delete via id
+	id := note1.ID
+	err = noteRepo.deleteNoteById(ctx, id)
+	assert.NoError(t, err)
+
+	_, err = noteRepo.findNoteById(ctx, id)
+	assert.Error(t, err)
+
+	// create second note
+	note2.UserID = user.ID
+	note2.User = user
+	err = noteRepo.CreateNote(ctx, &note2)
+	assert.NoError(t, err)
+
+	// Delete via note object
+	id = note2.ID
+	err = noteRepo.deleteNote(ctx, &note2)
+	assert.NoError(t, err)
+
+	_, err = noteRepo.findNoteById(ctx, id)
+	assert.Error(t, err)
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sqlDB.Close()
 
 }
 
 func TestCascadingDelete(t *testing.T) {
+	db := prepareDatabase(t)
+	//ctx := context.Background()
 
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sqlDB.Close()
 }

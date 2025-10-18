@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"user-notes-api/models"
 
 	"gorm.io/gorm"
@@ -37,4 +38,36 @@ func (r *UserRepository) findUserById(ctx context.Context, id uint) (models.User
 func (r *UserRepository) findUserByName(ctx context.Context, username string) (models.User, error) {
 	user, err := gorm.G[models.User](r.db).Where("username = ?", username).First(ctx)
 	return user, err
+}
+
+func (r *UserRepository) deleteUser(ctx context.Context, user *models.User) error {
+	noteRepo := NoteRepository{db: r.db}
+	err := noteRepo.deleteNotesOfUser(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	count, err := gorm.G[models.User](r.db).Where("id = ?", user.ID).Delete(ctx)
+
+	if count != 1 {
+		msg := fmt.Sprintf("unexpected count for deleting user. expected 1, received %d", count)
+		return errors.New(msg)
+	}
+	return err
+}
+
+func (r *UserRepository) deleteUserById(ctx context.Context, id uint) (int, error) {
+	noteRepo := NoteRepository{db: r.db}
+	count, err := noteRepo.deleteNotesOfUserByUserID(ctx, id)
+	if err != nil {
+		return count, err
+	}
+
+	ccount, err := gorm.G[models.User](r.db).Where("id = ?", id).Delete(ctx)
+
+	if ccount != 1 {
+		msg := fmt.Sprintf("unexpected count for deleting user. expected 1, received %d", ccount)
+		return count, errors.New(msg)
+	}
+	return count, err
 }

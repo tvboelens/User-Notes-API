@@ -116,8 +116,9 @@ func TestCRUDNotes(t *testing.T) {
 
 	// Read from DB
 	var note_read Note
-	query_result := db.Preload("User").First(&note_read, "ID = ?", note.ID)
+	query_result := db.Preload("User").First(&note_read, "id = ?", note.ID)
 	assert.NoError(t, query_result.Error)
+	assert.Equal(t, note_read.UserID, user.ID)
 	assert.Equal(t, note_read.User.ID, user.ID)
 	assert.Equal(t, note_read.User.Username, "testName")
 	assert.Equal(t, note_read.ID, note.ID)
