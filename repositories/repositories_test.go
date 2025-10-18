@@ -53,7 +53,27 @@ func TestUserRepository(t *testing.T) {
 	assert.Error(t, err)
 
 	// Find User by Id
+	user_read, err := userRepo.findUserById(ctx, user2.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, "Bob", user_read.Username)
+	assert.Equal(t, "hashed", user_read.Password)
+	assert.Equal(t, user2.ID, user_read.ID)
+
 	// Find User by name
+	user_read, err = userRepo.findUserByName(ctx, "Alice")
+	assert.NoError(t, err)
+	assert.Equal(t, "Alice", user_read.Username)
+	assert.Equal(t, "pwd", user_read.Password)
+	assert.Equal(t, user.ID, user_read.ID)
+
+	// Error when trying to find non existent user
+	user_read, err = userRepo.findUserByName(ctx, "Clint")
+	assert.Error(t, err)
+
+	id := max(user.ID, user2.ID) + 1
+	user_read, err = userRepo.findUserById(ctx, id)
+	assert.Error(t, err)
+
 	// Update user
 	// Delete user via Id
 	// Delete user via User object

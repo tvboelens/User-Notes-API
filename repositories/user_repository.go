@@ -28,3 +28,13 @@ func (r *UserRepository) CreateUserByNameAndPassword(ctx context.Context, userna
 	err := r.CreateUser(ctx, &user)
 	return user, err
 }
+
+func (r *UserRepository) findUserById(ctx context.Context, id uint) (models.User, error) {
+	user, err := gorm.G[models.User](r.db).Where("id = ?", id).First(ctx)
+	return user, err
+}
+
+func (r *UserRepository) findUserByName(ctx context.Context, username string) (models.User, error) {
+	user, err := gorm.G[models.User](r.db).Where("username = ?", username).First(ctx)
+	return user, err
+}
