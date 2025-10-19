@@ -53,42 +53,42 @@ func TestUserRepository(t *testing.T) {
 	assert.Error(t, err)
 
 	// Find User by Id
-	user_read, err := userRepo.findUserById(ctx, user2.ID)
+	user_read, err := userRepo.FindUserById(ctx, user2.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, "Bob", user_read.Username)
 	assert.Equal(t, "hashed", user_read.Password)
 	assert.Equal(t, user2.ID, user_read.ID)
 
 	// Find User by name
-	user_read, err = userRepo.findUserByName(ctx, "Alice")
+	user_read, err = userRepo.FindUserByName(ctx, "Alice")
 	assert.NoError(t, err)
 	assert.Equal(t, "Alice", user_read.Username)
 	assert.Equal(t, "pwd", user_read.Password)
 	assert.Equal(t, user.ID, user_read.ID)
 
 	// Error when trying to find non existent user
-	user_read, err = userRepo.findUserByName(ctx, "Clint")
+	user_read, err = userRepo.FindUserByName(ctx, "Clint")
 	assert.Error(t, err)
 
 	id := max(user.ID, user2.ID) + 1
-	user_read, err = userRepo.findUserById(ctx, id)
+	user_read, err = userRepo.FindUserById(ctx, id)
 	assert.Error(t, err)
 
 	// Update user
 	// Delete user via Id
 	id = user.ID
-	count, err := userRepo.deleteUserById(ctx, id)
+	count, err := userRepo.DeleteUserById(ctx, id)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, count)
 
-	_, err = userRepo.findUserById(ctx, id)
+	_, err = userRepo.FindUserById(ctx, id)
 	assert.Error(t, err)
 	// Delete user via User object
 	id = user2.ID
-	err = userRepo.deleteUser(ctx, &user2)
+	err = userRepo.DeleteUser(ctx, &user2)
 	assert.NoError(t, err)
 
-	_, err = userRepo.findUserById(ctx, id)
+	_, err = userRepo.FindUserById(ctx, id)
 	assert.Error(t, err)
 
 	sqlDB, err := db.DB()
@@ -121,9 +121,9 @@ func TestNoteRepository(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Assert that note cannot be created if the owner is not in DB
-	_, err = userRepo.findUserById(ctx, user_not_in_db.ID)
+	_, err = userRepo.FindUserById(ctx, user_not_in_db.ID)
 	assert.Error(t, err)
-	_, err = userRepo.findUserByName(ctx, "Bob")
+	_, err = userRepo.FindUserByName(ctx, "Bob")
 	assert.Error(t, err)
 
 	err = noteRepo.CreateNote(ctx, &note2)
@@ -134,7 +134,7 @@ func TestNoteRepository(t *testing.T) {
 	assert.Error(t, err)
 
 	// Find by Id
-	note_read, err := noteRepo.findNoteById(ctx, note1.ID)
+	note_read, err := noteRepo.FindNoteById(ctx, note1.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, note1.ID, note_read.ID)
 	assert.Equal(t, "Title1", note_read.Title)
@@ -146,10 +146,10 @@ func TestNoteRepository(t *testing.T) {
 	// Update
 	// Delete via id
 	id := note1.ID
-	err = noteRepo.deleteNoteById(ctx, id)
+	err = noteRepo.DeleteNoteById(ctx, id)
 	assert.NoError(t, err)
 
-	_, err = noteRepo.findNoteById(ctx, id)
+	_, err = noteRepo.FindNoteById(ctx, id)
 	assert.Error(t, err)
 
 	// create second note
@@ -160,10 +160,10 @@ func TestNoteRepository(t *testing.T) {
 
 	// Delete via note object
 	id = note2.ID
-	err = noteRepo.deleteNote(ctx, &note2)
+	err = noteRepo.DeleteNote(ctx, &note2)
 	assert.NoError(t, err)
 
-	_, err = noteRepo.findNoteById(ctx, id)
+	_, err = noteRepo.FindNoteById(ctx, id)
 	assert.Error(t, err)
 
 	sqlDB, err := db.DB()
@@ -201,18 +201,18 @@ func TestCascadingDelete(t *testing.T) {
 	user_id := user.ID
 
 	// Delete user by id
-	count, err := userRepo.deleteUserById(ctx, user.ID)
+	count, err := userRepo.DeleteUserById(ctx, user.ID)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, count)
 
-	_, err = userRepo.findUserById(ctx, user_id)
+	_, err = userRepo.FindUserById(ctx, user_id)
 	assert.Error(t, err)
 
 	// Assert that notes cannot be found after delete
-	_, err = noteRepo.findNoteById(ctx, id1)
+	_, err = noteRepo.FindNoteById(ctx, id1)
 	assert.Error(t, err)
 
-	_, err = noteRepo.findNoteById(ctx, id2)
+	_, err = noteRepo.FindNoteById(ctx, id2)
 	assert.Error(t, err)
 
 	// Recreate User
@@ -234,14 +234,14 @@ func TestCascadingDelete(t *testing.T) {
 	id2 = note2.ID
 
 	// Delete user by id
-	err = userRepo.deleteUser(ctx, &user)
+	err = userRepo.DeleteUser(ctx, &user)
 	assert.NoError(t, err)
 
 	// Assert that notes cannot be found after delete
-	_, err = noteRepo.findNoteById(ctx, id1)
+	_, err = noteRepo.FindNoteById(ctx, id1)
 	assert.Error(t, err)
 
-	_, err = noteRepo.findNoteById(ctx, id2)
+	_, err = noteRepo.FindNoteById(ctx, id2)
 	assert.Error(t, err)
 
 	sqlDB, err := db.DB()

@@ -20,12 +20,12 @@ func (r *NoteRepository) CreateNote(ctx context.Context, note *models.Note) erro
 	return tx.Error
 }
 
-func (r *NoteRepository) findNoteById(ctx context.Context, id uint) (models.Note, error) {
+func (r *NoteRepository) FindNoteById(ctx context.Context, id uint) (models.Note, error) {
 	note, err := gorm.G[models.Note](r.db).Where("id = ?", id).First(ctx)
 	return note, err
 }
 
-func (r *NoteRepository) deleteNote(ctx context.Context, note *models.Note) error {
+func (r *NoteRepository) DeleteNote(ctx context.Context, note *models.Note) error {
 	count, err := gorm.G[models.Note](r.db).Where("id = ?", note.ID).Delete(ctx)
 	if err == nil && count != 1 {
 		msg := fmt.Sprintf("unexpected count for deleting note. expected 1, received %d", count)
@@ -35,7 +35,7 @@ func (r *NoteRepository) deleteNote(ctx context.Context, note *models.Note) erro
 
 }
 
-func (r *NoteRepository) deleteNoteById(ctx context.Context, id uint) error {
+func (r *NoteRepository) DeleteNoteById(ctx context.Context, id uint) error {
 	count, err := gorm.G[models.Note](r.db).Where("id = ?", id).Delete(ctx)
 	if err == nil && count != 1 {
 		msg := fmt.Sprintf("unexpected count for deleting note. expected 1, received %d", count)
@@ -45,7 +45,7 @@ func (r *NoteRepository) deleteNoteById(ctx context.Context, id uint) error {
 
 }
 
-func (r *NoteRepository) deleteNotesOfUser(ctx context.Context, user *models.User) error {
+func (r *NoteRepository) DeleteNotesOfUser(ctx context.Context, user *models.User) error {
 	no_of_notes := len(user.Notes)
 	count, err := gorm.G[models.Note](r.db).Where("user_id = ?", user.ID).Delete(ctx)
 	if err == nil && count != no_of_notes {
@@ -56,7 +56,7 @@ func (r *NoteRepository) deleteNotesOfUser(ctx context.Context, user *models.Use
 
 }
 
-func (r *NoteRepository) deleteNotesOfUserByUserID(ctx context.Context, id uint) (int, error) {
+func (r *NoteRepository) DeleteNotesOfUserByUserID(ctx context.Context, id uint) (int, error) {
 	count, err := gorm.G[models.Note](r.db).Where("user_id = ?", id).Delete(ctx)
 	return count, err
 

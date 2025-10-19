@@ -30,19 +30,19 @@ func (r *UserRepository) CreateUserByNameAndPassword(ctx context.Context, userna
 	return user, err
 }
 
-func (r *UserRepository) findUserById(ctx context.Context, id uint) (models.User, error) {
+func (r *UserRepository) FindUserById(ctx context.Context, id uint) (models.User, error) {
 	user, err := gorm.G[models.User](r.db).Where("id = ?", id).First(ctx)
 	return user, err
 }
 
-func (r *UserRepository) findUserByName(ctx context.Context, username string) (models.User, error) {
+func (r *UserRepository) FindUserByName(ctx context.Context, username string) (models.User, error) {
 	user, err := gorm.G[models.User](r.db).Where("username = ?", username).First(ctx)
 	return user, err
 }
 
-func (r *UserRepository) deleteUser(ctx context.Context, user *models.User) error {
+func (r *UserRepository) DeleteUser(ctx context.Context, user *models.User) error {
 	noteRepo := NoteRepository{db: r.db}
-	err := noteRepo.deleteNotesOfUser(ctx, user)
+	err := noteRepo.DeleteNotesOfUser(ctx, user)
 	if err != nil {
 		return err
 	}
@@ -56,9 +56,9 @@ func (r *UserRepository) deleteUser(ctx context.Context, user *models.User) erro
 	return err
 }
 
-func (r *UserRepository) deleteUserById(ctx context.Context, id uint) (int, error) {
+func (r *UserRepository) DeleteUserById(ctx context.Context, id uint) (int, error) {
 	noteRepo := NoteRepository{db: r.db}
-	count, err := noteRepo.deleteNotesOfUserByUserID(ctx, id)
+	count, err := noteRepo.DeleteNotesOfUserByUserID(ctx, id)
 	if err != nil {
 		return count, err
 	}
