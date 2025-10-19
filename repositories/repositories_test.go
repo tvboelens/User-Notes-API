@@ -230,10 +230,13 @@ func TestCascadingDelete(t *testing.T) {
 	err = noteRepo.CreateNote(ctx, &note2)
 	assert.NoError(t, err)
 
+	user.Notes = append(user.Notes, note1)
+	user.Notes = append(user.Notes, note2)
+
 	id1 = note1.ID
 	id2 = note2.ID
 
-	// Delete user by id
+	// Delete user
 	err = userRepo.DeleteUser(ctx, &user)
 	assert.NoError(t, err)
 

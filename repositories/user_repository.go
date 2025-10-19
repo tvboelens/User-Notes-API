@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"user-notes-api/models"
 
 	"gorm.io/gorm"
@@ -47,7 +48,17 @@ func (r *UserRepository) DeleteUser(ctx context.Context, user *models.User) erro
 		return err
 	}
 
-	count, err := gorm.G[models.User](r.db).Where("id = ?", user.ID).Delete(ctx)
+	count, err := gorm.G[models.User](r.db).Where("id = ?", user.ID).Update(ctx, "username", user.Username+"_deleted_"+strconv.Itoa(int(user.ID)))
+	if count != 1 {
+		msg := fmt.Sprintf("unexpected count for updating username. expected 1, received %d", count)
+		return errors.New(msg)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	count, err = gorm.G[models.User](r.db).Where("id = ?", user.ID).Delete(ctx)
 
 	if count != 1 {
 		msg := fmt.Sprintf("unexpected count for deleting user. expected 1, received %d", count)
@@ -63,11 +74,32 @@ func (r *UserRepository) DeleteUserById(ctx context.Context, id uint) (int, erro
 		return count, err
 	}
 
-	ccount, err := gorm.G[models.User](r.db).Where("id = ?", id).Delete(ctx)
+	username, err := r.getUsernameFromID(ctx, id)
+
+	if err != nil {
+		return count, err
+	}
+
+	ccount, err := gorm.G[models.User](r.db).Where("id = ?", id).Update(ctx, "username", username+"_deleted_"+strconv.Itoa(int(id)))
+	if ccount != 1 {
+		msg := fmt.Sprintf("unexpected count for updating username. expected 1, received %d", ccount)
+		return count, errors.New(msg)
+	}
+
+	if err != nil {
+		return count, err
+	}
+
+	ccount, err = gorm.G[models.User](r.db).Where("id = ?", id).Delete(ctx)
 
 	if ccount != 1 {
 		msg := fmt.Sprintf("unexpected count for deleting user. expected 1, received %d", ccount)
 		return count, errors.New(msg)
 	}
 	return count, err
+}
+
+func (r *UserRepository) getUsernameFromID(ctx context.Context, id uint) (string, error) {
+	user, err := gorm.G[models.User](r.db).Where("id = ?", id).First(ctx)
+	return user.Username, err
 }
