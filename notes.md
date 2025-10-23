@@ -53,9 +53,9 @@
             - [] Make sure the User has all fields defined
             - [] Error if the user not found
             - Should only modify DB, not the User object -> Not quite true, gorm.Model has an UpdatedAt field
-        - [] Cascading delete for notes
-            - [] Implemented, but needs to be tested
-        - [] When deleting user modify the name so that it can be reused
+        - [x] Cascading delete for notes
+            - [x] Implemented, but needs to be tested
+        - [x] When deleting user modify the name so that it can be reused
     - [] CRUD Notes
         - [x] Find by Id
         - [x] Create same as user
@@ -75,6 +75,20 @@
     3. List notes for single user
     4. Find user by name
 2. Utils → hashing & JWT.
+    1. Pwd hashing
+        1. Argon2 and scrypt seem to be the best choices, bcrypt not so
+        2. Use salt?
+        3. Consider practicality between security and performance (iterations for hashing)
+        4. Probably only need two functions: generating the hash and verifying the password
+            1.  Use iterations as parameter (and other params?)
+        5. It seems best to have an interface with methods to generate a salt, a password and compare
+    3. JWT
+        1. Need a secret in order to create JWT
+        2. create header and payload
+        3. sign the jwt
+        4. Verifying jwt
+        5. Parsing?
+        4. Transmitting comes later
 3. Auth service → register/login business logic.
 4. Note service → CRUD & ownership rules.
 5. Middleware → JWT auth for requests.
