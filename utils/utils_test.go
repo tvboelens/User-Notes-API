@@ -33,4 +33,23 @@ func TestPasswordHashing(t *testing.T) {
 	isEqual, err := compare(hash, password, salt, &hasher)
 	assert.True(t, isEqual)
 	assert.NoError(t, err)
+
+	// Verification only works with the correct salt
+	wrong_salt, err := hasher.GenerateSalt()
+	assert.NoError(t, err)
+	assert.NotNil(t, wrong_salt)
+
+	isEqual, err = compare(hash, password, wrong_salt, &hasher)
+	assert.NoError(t, err)
+	assert.False(t, isEqual)
+
+	// Verification fails with the wrong password
+	wrong_pw := []byte("wrong_password")
+	isEqual, err = compare(hash, wrong_pw, salt, &hasher)
+	assert.NoError(t, err)
+	assert.False(t, isEqual)
+
+	isEqual, err = compare(hash, wrong_pw, wrong_salt, &hasher)
+	assert.NoError(t, err)
+	assert.False(t, isEqual)
 }
