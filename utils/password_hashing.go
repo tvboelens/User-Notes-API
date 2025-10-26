@@ -16,6 +16,14 @@ type PasswordComparer interface {
 	Compare(hash, salt, password []byte) (bool, error)
 }
 
+type ParsedHashString struct {
+	Hash    []byte
+	Salt    []byte
+	Id      string
+	Version int
+	Params  map[string]uint32
+}
+
 type Argon2IdHasher struct {
 	Time    uint32
 	Memory  uint32
@@ -57,4 +65,13 @@ func (h *Argon2IdHasher) Compare(hash, salt, password []byte) (bool, error) {
 	}
 
 	return (bytes.Equal(hashed_pw, hash)), nil
+}
+
+func EncodeHashString(ph *ParsedHashString) (string, error) {
+	return "", nil
+}
+
+func ParseHashString(hash_string string) (ParsedHashString, error) {
+	var ph ParsedHashString
+	return ph, nil
 }

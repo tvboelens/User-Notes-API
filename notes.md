@@ -91,12 +91,12 @@
         4. Transmitting comes later
 3. Auth service → register/login business logic.
     1. Credentials struct
-    2. Login service
+    2. Login service (function?)
         1. Should contain user repository and password comparer (or maybe a struct)
         2. Use repo to retrieve password hash string from db for the user.
         3. Password comparer (or separate class for parsing hash strings?) parses hash string to extract algorithm, params, hash and salt.
         4. Password comparer then compares.
-    3. Registration service
+    3. Registration service (function?)
         1. Use pwd hasher (+maybe separate class) to create the hash string out of the password.
         2. Then try to create the user via the user repo. This should go wrong if username already exists.
 4. Note service → CRUD & ownership rules.
