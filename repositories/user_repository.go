@@ -10,6 +10,16 @@ import (
 	"gorm.io/gorm"
 )
 
+type UserReader interface {
+	FindUserById(ctx context.Context, id uint) (models.User, error)
+	FindUserByName(ctx context.Context, username string) (models.User, error)
+}
+
+type UserCreator interface {
+	CreateUser(ctx context.Context, user *models.User) error
+	CreateUserByNameAndPassword(ctx context.Context, username string, password string) (models.User, error)
+}
+
 type UserRepository struct {
 	db *gorm.DB
 }
