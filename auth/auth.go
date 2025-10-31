@@ -8,7 +8,7 @@ import (
 )
 
 type Credentials struct {
-	Username string `json:"email"`
+	Username string `json:"username"`
 	Password string `json:"password"`
 }
 

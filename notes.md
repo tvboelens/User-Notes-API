@@ -63,6 +63,19 @@
         - [x] Delete by id
     - [] Operations for multiple objects, i.e. allow arrays/slices of Users and Notes?
 - [] Error messaging
+- [] utils
+    - [] encode hash string
+    - [] parse hash string
+- [] auth
+    - [x] testing
+        - [x] Login 
+            - [x] Succesful login with the right credentials
+            - [x] Credentials wrong then login fails
+                - [x] Wrong pwd
+                - [x] username missing
+        - [] Registration
+            - [] Login works after registration
+            - [] Before registration cannot login
 
 
 

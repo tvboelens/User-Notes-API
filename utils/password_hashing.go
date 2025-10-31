@@ -68,10 +68,10 @@ func (h *Argon2IdHasher) Compare(hash, salt, password []byte) (bool, error) {
 }
 
 func EncodeHashString(ph *ParsedHashString) (string, error) {
-	return "", nil
+	return string(ph.Hash), nil
 }
 
 func ParseHashString(hash_string string) (ParsedHashString, error) {
-	var ph ParsedHashString
+	ph := ParsedHashString{Hash: []byte(hash_string)}
 	return ph, nil
 }
