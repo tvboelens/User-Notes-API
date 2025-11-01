@@ -66,16 +66,18 @@
 - [] utils
     - [] encode hash string
     - [] parse hash string
-- [] auth
+- [x] auth
+    - [x] Custom error when user not found
     - [x] testing
         - [x] Login 
             - [x] Succesful login with the right credentials
             - [x] Credentials wrong then login fails
                 - [x] Wrong pwd
                 - [x] username missing
-        - [] Registration
-            - [] Login works after registration
-            - [] Before registration cannot login
+        - [x] Registration
+            - [x] Login works after registration
+            - [x] Before registration cannot login -> user not found error
+            
 
 
 

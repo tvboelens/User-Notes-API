@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	//"errors"
 	"fmt"
 	"user-notes-api/repositories"
 	"user-notes-api/utils"
@@ -12,10 +13,23 @@ type Credentials struct {
 	Password string `json:"password"`
 }
 
+type ErrorNotFound struct {
+	Username string
+	Err      error
+}
+
+func (e *ErrorNotFound) Error() string {
+	return fmt.Sprintf("user %q not found: %v", e.Username, e.Err)
+}
+
+func (e *ErrorNotFound) Unwrap() error {
+	return e.Err
+}
+
 func LoginUser(ctx context.Context, credentials *Credentials, user_reader repositories.UserReader, pwd_comparer utils.PasswordComparer) (bool, error) {
 	user, err := user_reader.FindUserByName(ctx, credentials.Username)
 	if err != nil {
-		return false, fmt.Errorf("login user: could not find user")
+		return false, &ErrorNotFound{Username: credentials.Username, Err: err}
 	}
 
 	p, err := utils.ParseHashString(user.Password)
