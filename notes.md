@@ -20,6 +20,9 @@
 - `routes`
     - Register routes
     - Connect URL to controllers and applies middleware
+- `services`
+    - handle login and registration
+    - handle notes
 - `utils`
     - Helper functions
     - JWT generation/verification, password hashing, input validation
@@ -104,17 +107,39 @@
         4. Verifying jwt
         5. Parsing?
         4. Transmitting comes later
+        6. Fields
+            1. 
 3. Auth service → register/login business logic.
-    1. Credentials struct
-    2. Login service (function?)
-        1. Should contain user repository and password comparer (or maybe a struct)
-        2. Use repo to retrieve password hash string from db for the user.
-        3. Password comparer (or separate class for parsing hash strings?) parses hash string to extract algorithm, params, hash and salt.
-        4. Password comparer then compares.
-    3. Registration service (function?)
-        1. Use pwd hasher (+maybe separate class) to create the hash string out of the password.
-        2. Then try to create the user via the user repo. This should go wrong if username already exists.
 4. Note service → CRUD & ownership rules.
 5. Middleware → JWT auth for requests.
 6. Controllers & Routes → HTTP layer.
+
+### Services
+1. Credentials struct (already defined in utils or auth)
+2. Login service
+    1. Should contain user repository and password comparer via DI (use constructor?)
+        1. Have two interfaces for different parts of the repository, could inject via pointers
+        2. Same for password comparer
+    2. Call auth.LoginUser
+    5. Generate JWT and return it
+3. Registration service
+    1. Inject pwd hasher and user repo (use constructor?).
+    2. Check if user already exists
+    2. Call utils.RegisterUser
+    3. Generate JWT and return it
+4. Note handling service
+    1. Fetch note ids, maybe with titles (usecase would be showing a list of notes by title + some metadata)
+    2. Fetch note contents by id
+    3. Save a new note
+    4. Edit (i.e. update) a note
+    5. Delete a note
+    6. Block a user from accessing notes of another user
+
+### Middleware
+1. auth middleware
+    1. Check if auth header and bearer present
+    2. Check the jwt validity and call next handler
+    3. Use gin context to pass claims to next handlers
+    4. If anything fails return status unauthorized
+
 
