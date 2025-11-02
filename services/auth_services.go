@@ -12,13 +12,13 @@ import (
 )
 
 type LoginService struct {
-	password_comparer utils.PasswordComparer
-	user_repo         repositories.UserReader
+	Password_comparer utils.PasswordComparer
+	User_repo         repositories.UserReader
 }
 
 type RegistrationService struct {
-	password_hasher utils.PasswordHasher
-	user_repo       repositories.UserCreator
+	Password_hasher utils.PasswordHasher
+	User_repo       repositories.UserCreator
 }
 
 type ErrorWrongPassword struct {
@@ -29,8 +29,18 @@ func (e *ErrorWrongPassword) Error() string {
 	return fmt.Sprintf("wrong password for user %q:", e.Username)
 }
 
+func NewLoginService(password_comparer utils.PasswordComparer, user_repo repositories.UserReader) *LoginService {
+	login_service := LoginService{Password_comparer: password_comparer, User_repo: user_repo}
+	return &login_service
+}
+
+func NewRegistrationService(password_hasher utils.PasswordHasher, user_repo repositories.UserCreator) *RegistrationService {
+	registration_service := RegistrationService{Password_hasher: password_hasher, User_repo: user_repo}
+	return &registration_service
+}
+
 func (s *LoginService) Login(ctx context.Context, jwt_secret string, credentials auth.Credentials) (string, error) {
-	isValid, err := auth.LoginUser(ctx, &credentials, s.user_repo, s.password_comparer)
+	isValid, err := auth.LoginUser(ctx, &credentials, s.User_repo, s.Password_comparer)
 	if err != nil {
 		return "", err
 	}
@@ -47,13 +57,13 @@ func (s *LoginService) Login(ctx context.Context, jwt_secret string, credentials
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(4 * time.Hour)),
 	})
 
-	token_string, err := token.SignedString(jwt_secret)
+	token_string, err := token.SignedString([]byte(jwt_secret))
 
 	return token_string, err
 }
 
 func (s *RegistrationService) Register(ctx context.Context, jwt_secret string, credentials auth.Credentials) (string, error) {
-	err := auth.RegisterUser(ctx, &credentials, s.user_repo, s.password_hasher)
+	err := auth.RegisterUser(ctx, &credentials, s.User_repo, s.Password_hasher)
 
 	if err != nil {
 		return "", err
@@ -66,7 +76,7 @@ func (s *RegistrationService) Register(ctx context.Context, jwt_secret string, c
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(4 * time.Hour)),
 	})
 
-	token_string, err := token.SignedString(jwt_secret)
+	token_string, err := token.SignedString([]byte(jwt_secret))
 
 	return token_string, err
 }
