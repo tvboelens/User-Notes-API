@@ -4,30 +4,15 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 
 	"user-notes-api/auth"
 	"user-notes-api/models"
 	"user-notes-api/testing/testutils"
 )
-
-/*
-	Login:
-		1. error if user does not exist -> done
-		2. error if wrong password -> done
-		3. in both these case need the jwt to be empty -> done
-		4. success with correct credentials, need to check validity of jwt
-			1. subject is user(name)
-			2. Issuer not empty
-			3. Issued at and expires at have meaningful (?) values (difference of 4 hours and issued at is somewhere in the last minute)
-			4. signature is correct
-
-	Register
-		1. error if user already exists -> done
-		2. success if not -> done
-		3.	validity of jwt as above
-*/
 
 func TestAuthServices(t *testing.T) {
 	var username string = "Alice"
@@ -59,10 +44,60 @@ func TestAuthServices(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, len(token_string) > 0)
 
+	// check the claims in the token
+	token, err := jwt.Parse(token_string, func(token *jwt.Token) (any, error) {
+		return []byte(jwt_secret), nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
+	assert.NoError(t, err)
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	assert.True(t, ok)
+
+	issuer, err := claims.GetIssuer()
+	assert.NoError(t, err)
+	assert.Equal(t, "auth.user-notes-api.local", issuer)
+
+	subject, err := claims.GetSubject()
+	assert.NoError(t, err)
+	assert.Equal(t, creds.Username, subject)
+
+	issuedAt, err := claims.GetIssuedAt()
+	assert.NoError(t, err)
+	assert.True(t, time.Now().After(issuedAt.Time))
+
+	expirationTime, err := claims.GetExpirationTime()
+	assert.NoError(t, err)
+	assert.True(t, expirationTime.After(time.Now()))
+
 	// After registration login is possible
 	token_string, err = login_service.Login(ctx, jwt_secret, creds)
 	assert.NoError(t, err)
 	assert.True(t, len(token_string) > 0)
+
+	// check the claims in the token
+	token, err = jwt.Parse(token_string, func(token *jwt.Token) (any, error) {
+		return []byte(jwt_secret), nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
+	assert.NoError(t, err)
+
+	claims, ok = token.Claims.(jwt.MapClaims)
+	assert.True(t, ok)
+
+	issuer, err = claims.GetIssuer()
+	assert.NoError(t, err)
+	assert.Equal(t, "auth.user-notes-api.local", issuer)
+
+	subject, err = claims.GetSubject()
+	assert.NoError(t, err)
+	assert.Equal(t, creds.Username, subject)
+
+	issuedAt, err = claims.GetIssuedAt()
+	assert.NoError(t, err)
+	assert.True(t, time.Now().After(issuedAt.Time))
+
+	expirationTime, err = claims.GetExpirationTime()
+	assert.NoError(t, err)
+	assert.True(t, expirationTime.After(time.Now()))
 
 	// Registration fails if user already exists
 	token_string, err = registration_service.Register(ctx, jwt_secret, creds)
