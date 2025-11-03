@@ -13,18 +13,10 @@ import (
 )
 
 /*
-	Mocks for
-		1. utils.PasswordComparer
-		2. repositories.UserReader
-		3. utils.PasswordHasher
-		4. repositories.UserCreator
-
-	I could simply use the mocks from the auth tests?
-
 	Login:
-		1. error if user does not exist
-		2. error if wrong password
-		3. in both these case need the jwt to be empty
+		1. error if user does not exist -> done
+		2. error if wrong password -> done
+		3. in both these case need the jwt to be empty -> done
 		4. success with correct credentials, need to check validity of jwt
 			1. subject is user(name)
 			2. Issuer not empty
@@ -32,8 +24,8 @@ import (
 			4. signature is correct
 
 	Register
-		1. error if user already exists -> empty jwt
-		2. success if not
+		1. error if user already exists -> done
+		2. success if not -> done
 		3.	validity of jwt as above
 */
 
@@ -41,7 +33,7 @@ func TestAuthServices(t *testing.T) {
 	var username string = "Alice"
 	var jwt_secret string = "jwt_secret"
 	var password string = "secret_password"
-	//var wrong_pwd string = "wrong_password"
+	var wrong_pwd string = "wrong_password"
 
 	creds := auth.Credentials{Username: username, Password: password}
 	ctx := context.Background()
@@ -76,4 +68,11 @@ func TestAuthServices(t *testing.T) {
 	token_string, err = registration_service.Register(ctx, jwt_secret, creds)
 	assert.Error(t, err)
 	assert.False(t, len(token_string) > 0)
+
+	// Login fails with the wrong password
+	wrong_creds := auth.Credentials{Username: username, Password: wrong_pwd}
+	token_string, err = login_service.Login(ctx, jwt_secret, wrong_creds)
+
+	assert.Error(t, err)
+	assert.Equal(t, 0, len(token_string))
 }
