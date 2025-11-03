@@ -49,7 +49,7 @@ func TestUserRepository(t *testing.T) {
 	err = userRepo.CreateUser(ctx, &user_duplicate)
 	assert.Error(t, err)
 
-	user_duplicate, err = userRepo.CreateUserByNameAndPassword(ctx, "Alice", "hashed")
+	_, err = userRepo.CreateUserByNameAndPassword(ctx, "Alice", "hashed")
 	assert.Error(t, err)
 
 	// Find User by Id
@@ -85,7 +85,7 @@ func TestUserRepository(t *testing.T) {
 	assert.Error(t, err)
 	// Delete user via User object
 	id = user2.ID
-	err = userRepo.DeleteUser(ctx, &user2)
+	err = userRepo.DeleteUser(ctx, user2)
 	assert.NoError(t, err)
 
 	_, err = userRepo.FindUserById(ctx, id)

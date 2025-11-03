@@ -52,6 +52,7 @@ func TestAuthServices(t *testing.T) {
 
 	login_service := NewLoginService(&pwd_hasher, &repo)
 
+	// Login fails if user does not exist and we get a NotFound error
 	token_string, err := login_service.Login(ctx, jwt_secret, creds)
 
 	assert.Error(t, err)
@@ -61,11 +62,18 @@ func TestAuthServices(t *testing.T) {
 
 	registration_service := NewRegistrationService(&pwd_hasher, &repo)
 
+	// First registration succesful and jwt token is not empty
 	token_string, err = registration_service.Register(ctx, jwt_secret, creds)
 	assert.NoError(t, err)
 	assert.True(t, len(token_string) > 0)
 
+	// After registration login is possible
 	token_string, err = login_service.Login(ctx, jwt_secret, creds)
 	assert.NoError(t, err)
 	assert.True(t, len(token_string) > 0)
+
+	// Registration fails if user already exists
+	token_string, err = registration_service.Register(ctx, jwt_secret, creds)
+	assert.Error(t, err)
+	assert.False(t, len(token_string) > 0)
 }

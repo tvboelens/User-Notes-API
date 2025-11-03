@@ -30,26 +30,31 @@ func (m *MockUserCreatorReader) CreateUser(ctx context.Context, user *models.Use
 	return nil
 }
 
-func (m *MockUserCreatorReader) CreateUserByNameAndPassword(ctx context.Context, username string, password string) (models.User, error) {
+func (m *MockUserCreatorReader) CreateUserByNameAndPassword(ctx context.Context, username string, password string) (*models.User, error) {
+	if m.Registered {
+		msg := "username " + username + " already exists"
+		return nil, errors.New(msg)
+	}
+
 	ph := utils.ParsedHashString{Hash: []byte(password)}
 	hash_string, err := utils.EncodeHashString(&ph)
 	if err != nil {
-		return models.User{Username: "fake_name", Password: ""}, err
+		return nil, err
 	}
 	m.User = &models.User{Username: username, Password: hash_string}
 	m.Registered = true
-	return *m.User, nil
+	return m.User, nil
 }
 
-func (m *MockUserCreatorReader) FindUserById(ctx context.Context, id uint) (models.User, error) {
-	return models.User{Username: "fake_username", Password: ""}, errors.New("function not supported")
+func (m *MockUserCreatorReader) FindUserById(ctx context.Context, id uint) (*models.User, error) {
+	return nil, errors.New("function not supported")
 }
 
-func (m *MockUserCreatorReader) FindUserByName(ctx context.Context, username string) (models.User, error) {
+func (m *MockUserCreatorReader) FindUserByName(ctx context.Context, username string) (*models.User, error) {
 	if username == m.User.Username && m.Registered {
-		return *m.User, nil
+		return m.User, nil
 	}
-	return models.User{Username: "fake_username", Password: ""}, errors.New("wrong user")
+	return nil, errors.New("wrong user")
 }
 
 func (m *MockPwdHasher) GenerateHash(password, salt []byte) ([]byte, error) {

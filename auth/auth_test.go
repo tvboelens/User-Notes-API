@@ -11,42 +11,6 @@ import (
 	"user-notes-api/testing/testutils"
 )
 
-func TestMocks(t *testing.T) {
-	password := []byte("secret_password")
-	wrong_pwd := []byte("wrong_password")
-
-	var pwd_hasher testutils.MockPwdHasher
-
-	salt, err := pwd_hasher.GenerateSalt()
-	assert.NoError(t, err)
-
-	hash, err := pwd_hasher.GenerateHash(password, salt)
-	assert.NoError(t, err)
-
-	isValid, err := pwd_hasher.Compare(hash, salt, password)
-	assert.NoError(t, err)
-	assert.True(t, isValid)
-
-	hash, err = pwd_hasher.GenerateHash(wrong_pwd, salt)
-	assert.NoError(t, err)
-
-	isValid, err = pwd_hasher.Compare(hash, salt, password)
-	assert.NoError(t, err)
-	assert.False(t, isValid)
-
-	var repo testutils.MockUserCreatorReader
-	ctx := context.Background()
-	_, err = repo.CreateUserByNameAndPassword(ctx, "Alice", string(password))
-	assert.NoError(t, err)
-
-	user, err := repo.FindUserByName(ctx, "Alice")
-	assert.NoError(t, err)
-	assert.Equal(t, "Alice", user.Username)
-
-	_, err = repo.FindUserByName(ctx, "Bob")
-	assert.Error(t, err)
-}
-
 func TestRegisterAndLogin(t *testing.T) {
 	var username string = "Alice"
 	var password string = "secret_password"
