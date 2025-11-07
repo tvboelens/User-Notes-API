@@ -122,6 +122,7 @@
         2. Same for password comparer
     2. Call auth.LoginUser
     5. Generate JWT and return it
+    6. Return user id?
 3. Registration service
     1. Inject pwd hasher and user repo (use constructor?).
     2. Check if user already exists
