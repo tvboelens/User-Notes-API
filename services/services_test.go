@@ -27,20 +27,20 @@ func TestAuthServices(t *testing.T) {
 	repo := testutils.MockUserCreatorReader{User: &user, Registered: false}
 	pwd_hasher := testutils.MockPwdHasher{Hash: []byte(password)}
 
-	login_service := NewLoginService(&pwd_hasher, &repo)
+	login_service := NewLoginService(&pwd_hasher, &repo, jwt_secret)
 
 	// Login fails if user does not exist and we get a NotFound error
-	token_string, err := login_service.Login(ctx, jwt_secret, creds)
+	token_string, err := login_service.Login(ctx, creds)
 
 	assert.Error(t, err)
 	assert.Equal(t, 0, len(token_string))
 	var errNotFound *auth.ErrorNotFound
 	assert.True(t, errors.As(err, &errNotFound))
 
-	registration_service := NewRegistrationService(&pwd_hasher, &repo)
+	registration_service := NewRegistrationService(&pwd_hasher, &repo, jwt_secret)
 
 	// First registration succesful and jwt token is not empty
-	token_string, err = registration_service.Register(ctx, jwt_secret, creds)
+	token_string, err = registration_service.Register(ctx, creds)
 	assert.NoError(t, err)
 	assert.True(t, len(token_string) > 0)
 
@@ -70,7 +70,7 @@ func TestAuthServices(t *testing.T) {
 	assert.True(t, expirationTime.After(time.Now()))
 
 	// After registration login is possible
-	token_string, err = login_service.Login(ctx, jwt_secret, creds)
+	token_string, err = login_service.Login(ctx, creds)
 	assert.NoError(t, err)
 	assert.True(t, len(token_string) > 0)
 
@@ -100,13 +100,13 @@ func TestAuthServices(t *testing.T) {
 	assert.True(t, expirationTime.After(time.Now()))
 
 	// Registration fails if user already exists
-	token_string, err = registration_service.Register(ctx, jwt_secret, creds)
+	token_string, err = registration_service.Register(ctx, creds)
 	assert.Error(t, err)
 	assert.False(t, len(token_string) > 0)
 
 	// Login fails with the wrong password
 	wrong_creds := auth.Credentials{Username: username, Password: wrong_pwd}
-	token_string, err = login_service.Login(ctx, jwt_secret, wrong_creds)
+	token_string, err = login_service.Login(ctx, wrong_creds)
 
 	assert.Error(t, err)
 	assert.Equal(t, 0, len(token_string))
