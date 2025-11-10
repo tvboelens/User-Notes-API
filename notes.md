@@ -100,9 +100,19 @@
         4. Probably only need two functions: generating the hash and verifying the password
             1.  Use iterations as parameter (and other params?)
         5. It seems best to have an interface with methods to generate a salt, a password and compare
-    3. JWT
+        6. Create the hash string. This will be stored in the db.
+    3. JWT -> I don't think this needs to be in the utils, creation can be done in the login controller/handler and verification can be done in middleware.
         1. Need a secret in order to create JWT
         2. create header and payload
+            1. RFC 7519 gives the spec
+            2. Claims: 
+                1. Issuer (set name via config, can use something like `auth.user-notes-api.local`)
+                2. sub
+                3. exp
+                3. iat
+                4. jti? Seems like a good idea, possibly there are scenarios where revocation is necessary.
+                5. role? permissions? I would say not necessary, since every user will only be able to edit their own notes and there will be no admin.
+                7. session id? Not now, but maybe add this later.
         3. sign the jwt
         4. Verifying jwt
         5. Parsing?
@@ -111,7 +121,13 @@
             1. 
 3. Auth service → register/login business logic.
 4. Note service → CRUD & ownership rules.
-5. Middleware → JWT auth for requests.
+5. Middleware
+    1. Authentication
+    2. Logging
+    3. Rate limiting?
+    4. Panic/error recovery (handle service/handler panics/errors)
+    5. Request body parsing?
+    6. Metrics?
 6. Controllers & Routes → HTTP layer.
 
 ### Services
