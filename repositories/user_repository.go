@@ -11,13 +11,13 @@ import (
 )
 
 type UserReader interface {
-	FindUserById(ctx context.Context, id uint) (models.User, error)
-	FindUserByName(ctx context.Context, username string) (models.User, error)
+	FindUserById(ctx context.Context, id uint) (*models.User, error)
+	FindUserByName(ctx context.Context, username string) (*models.User, error)
 }
 
 type UserCreator interface {
 	CreateUser(ctx context.Context, user *models.User) error
-	CreateUserByNameAndPassword(ctx context.Context, username string, password string) (models.User, error)
+	CreateUserByNameAndPassword(ctx context.Context, username string, password string) (*models.User, error)
 }
 
 type UserRepository struct {
@@ -35,20 +35,20 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *models.User) erro
 	return err
 }
 
-func (r *UserRepository) CreateUserByNameAndPassword(ctx context.Context, username string, password string) (models.User, error) {
+func (r *UserRepository) CreateUserByNameAndPassword(ctx context.Context, username string, password string) (*models.User, error) {
 	user := models.User{Username: username, Password: password}
 	err := r.CreateUser(ctx, &user)
-	return user, err
+	return &user, err
 }
 
-func (r *UserRepository) FindUserById(ctx context.Context, id uint) (models.User, error) {
+func (r *UserRepository) FindUserById(ctx context.Context, id uint) (*models.User, error) {
 	user, err := gorm.G[models.User](r.db).Where("id = ?", id).First(ctx)
-	return user, err
+	return &user, err
 }
 
-func (r *UserRepository) FindUserByName(ctx context.Context, username string) (models.User, error) {
+func (r *UserRepository) FindUserByName(ctx context.Context, username string) (*models.User, error) {
 	user, err := gorm.G[models.User](r.db).Where("username = ?", username).First(ctx)
-	return user, err
+	return &user, err
 }
 
 func (r *UserRepository) DeleteUser(ctx context.Context, user *models.User) error {

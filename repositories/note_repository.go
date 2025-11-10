@@ -6,6 +6,14 @@ import "fmt"
 import "gorm.io/gorm"
 import "user-notes-api/models"
 
+type NoteReader interface {
+	FindNoteById(ctx context.Context, id uint) (*models.Note, error)
+}
+
+type NoteCreator interface {
+	CreateNote(ctx context.Context, note *models.Note) error
+}
+
 type NoteRepository struct {
 	db *gorm.DB
 }
