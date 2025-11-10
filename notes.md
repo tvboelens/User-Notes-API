@@ -53,9 +53,9 @@
             - [] Make sure the User has all fields defined
             - [] Error if the user not found
             - Should only modify DB, not the User object -> Not quite true, gorm.Model has an UpdatedAt field
-        - [] Cascading delete for notes
-            - [] Implemented, but needs to be tested
-        - [] When deleting user modify the name so that it can be reused
+        - [x] Cascading delete for notes
+            - [x] Implemented, but needs to be tested
+        - [x] When deleting user modify the name so that it can be reused
     - [] CRUD Notes
         - [x] Find by Id
         - [x] Create same as user
@@ -63,6 +63,21 @@
         - [x] Delete by id
     - [] Operations for multiple objects, i.e. allow arrays/slices of Users and Notes?
 - [] Error messaging
+- [] utils
+    - [] encode hash string
+    - [] parse hash string
+- [x] auth
+    - [x] Custom error when user not found
+    - [x] testing
+        - [x] Login 
+            - [x] Succesful login with the right credentials
+            - [x] Credentials wrong then login fails
+                - [x] Wrong pwd
+                - [x] username missing
+        - [x] Registration
+            - [x] Login works after registration
+            - [x] Before registration cannot login -> user not found error
+            
 
 
 
@@ -75,7 +90,30 @@
     3. List notes for single user
     4. Find user by name
 2. Utils → hashing & JWT.
+    1. Pwd hashing
+        1. Argon2 and scrypt seem to be the best choices, bcrypt not so
+        2. Use salt?
+        3. Consider practicality between security and performance (iterations for hashing)
+        4. Probably only need two functions: generating the hash and verifying the password
+            1.  Use iterations as parameter (and other params?)
+        5. It seems best to have an interface with methods to generate a salt, a password and compare
+    3. JWT
+        1. Need a secret in order to create JWT
+        2. create header and payload
+        3. sign the jwt
+        4. Verifying jwt
+        5. Parsing?
+        4. Transmitting comes later
 3. Auth service → register/login business logic.
+    1. Credentials struct
+    2. Login service (function?)
+        1. Should contain user repository and password comparer (or maybe a struct)
+        2. Use repo to retrieve password hash string from db for the user.
+        3. Password comparer (or separate class for parsing hash strings?) parses hash string to extract algorithm, params, hash and salt.
+        4. Password comparer then compares.
+    3. Registration service (function?)
+        1. Use pwd hasher (+maybe separate class) to create the hash string out of the password.
+        2. Then try to create the user via the user repo. This should go wrong if username already exists.
 4. Note service → CRUD & ownership rules.
 5. Middleware → JWT auth for requests.
 6. Controllers & Routes → HTTP layer.
