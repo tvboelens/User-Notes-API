@@ -11,6 +11,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type LoginServiceIfc interface {
+	Login(ctx context.Context, credentials auth.Credentials) (string, error)
+}
+
+type RegistrationServiceIfc interface {
+	Register(ctx context.Context, credentials auth.Credentials) (string, error)
+}
+
 type LoginService struct {
 	Password_comparer utils.PasswordComparer
 	User_repo         repositories.UserReader
