@@ -86,5 +86,27 @@ func TestAuthControllerLoginFailure(t *testing.T) {
 }
 
 func TestAuthControllerLoginUserNotFound(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 
+	body := []byte(`{"username": "Unknown user", "password": "pwd"}`)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/login", bytes.NewBuffer(body))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	notFoundError := new(auth.ErrorNotFound)
+	notFoundError.Username = "Unknown user"
+
+	mockLoginService := new(servicemocks.MockLoginService)
+	mockLoginService.On("Login", c.Request.Context(), auth.Credentials{Username: "Unknown user", Password: "pwd"}).Return("", notFoundError)
+
+	mockRegistrationService := new(servicemocks.MockRegistrationService)
+
+	authController := NewAuthController(mockLoginService, mockRegistrationService)
+
+	authController.Login(c)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Contains(t, w.Body.String(), "user not found")
+	mockLoginService.AssertExpectations(t)
 }

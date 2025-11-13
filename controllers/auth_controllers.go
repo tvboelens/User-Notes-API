@@ -38,11 +38,14 @@ func (a *AuthController) Login(c *gin.Context) {
 	token_string, err := a.LoginService.Login(request_ctx, credentials)
 
 	if err != nil {
-		wrongPwdError := new(services.ErrorWrongPassword)
-		wrongPwdError.Username = credentials.Username
+		var wrongPwdError *services.ErrorWrongPassword
+		var notFoundError *auth.ErrorNotFound
 
 		if errors.As(err, &wrongPwdError) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "wrong password"})
+			return
+		} else if errors.As(err, &notFoundError) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 			return
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
