@@ -37,9 +37,10 @@ func (a *AuthController) Login(c *gin.Context) {
 	request_ctx := c.Request.Context()
 	token_string, err := a.LoginService.Login(request_ctx, credentials)
 
-	wrongPwdError := new(services.ErrorWrongPassword)
-	wrongPwdError.Username = credentials.Username
 	if err != nil {
+		wrongPwdError := new(services.ErrorWrongPassword)
+		wrongPwdError.Username = credentials.Username
+
 		if errors.As(err, &wrongPwdError) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "wrong password"})
 			return
