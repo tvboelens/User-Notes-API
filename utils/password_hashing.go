@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
+	"strconv"
+	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -68,8 +70,35 @@ func (h *Argon2IdHasher) Compare(hash, salt, password []byte) (bool, error) {
 	return (bytes.Equal(hashed_pw, hash)), nil
 }
 
+// hash string encoding according to https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md
 func EncodeHashString(ph *ParsedHashString) (string, error) {
-	return base64.RawStdEncoding.EncodeToString(ph.Hash), nil
+	hash_string := "$" + ph.Id
+
+	if ph.Version > 0 {
+		hash_string += "$v=" + strconv.Itoa(ph.Version)
+	}
+
+	if len(ph.Params) > 0 {
+		hash_string += "$"
+		for key, val := range ph.Params {
+			hash_string += key + "=" + strconv.FormatUint(uint64(val), 10) + ","
+		}
+		// remove trailing comma
+		hash_string = strings.TrimSuffix(hash_string, ",")
+	}
+
+	if len(ph.Salt) > 0 {
+		encoded_salt := "$" + base64.RawStdEncoding.EncodeToString(ph.Salt)
+		hash_string += encoded_salt
+
+		// hash may only be present if a salt is present
+		if len(ph.Hash) > 0 {
+			encoded_hash := "$" + base64.RawStdEncoding.EncodeToString(ph.Hash)
+			hash_string += encoded_hash
+		}
+	}
+
+	return hash_string, nil
 }
 
 func ParseHashString(hash_string string) (ParsedHashString, error) {
