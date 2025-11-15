@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"runtime"
 	"testing"
 
@@ -52,4 +53,17 @@ func TestPasswordHashing(t *testing.T) {
 	isEqual, err = compare(hash, wrong_pw, wrong_salt, &hasher)
 	assert.NoError(t, err)
 	assert.False(t, isEqual)
+}
+
+func TestHashStringEncoding(t *testing.T) {
+	hash := []byte("super_long_password")
+
+	ph := ParsedHashString{Hash: hash}
+	str, err := EncodeHashString(&ph)
+
+	assert.NoError(t, err)
+	decoded_ph, err := ParseHashString(str)
+
+	assert.NoError(t, err)
+	assert.True(t, bytes.Equal(hash, decoded_ph.Hash))
 }
