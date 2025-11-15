@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/base64"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -68,10 +69,11 @@ func (h *Argon2IdHasher) Compare(hash, salt, password []byte) (bool, error) {
 }
 
 func EncodeHashString(ph *ParsedHashString) (string, error) {
-	return string(ph.Hash), nil
+	return base64.RawStdEncoding.EncodeToString(ph.Hash), nil
 }
 
 func ParseHashString(hash_string string) (ParsedHashString, error) {
-	ph := ParsedHashString{Hash: []byte(hash_string)}
-	return ph, nil
+	decoded, err := base64.RawStdEncoding.DecodeString(hash_string)
+	ph := ParsedHashString{Hash: decoded}
+	return ph, err
 }

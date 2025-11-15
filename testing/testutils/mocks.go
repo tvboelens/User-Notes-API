@@ -36,12 +36,7 @@ func (m *MockUserCreatorReader) CreateUserByNameAndPassword(ctx context.Context,
 		return nil, errors.New(msg)
 	}
 
-	ph := utils.ParsedHashString{Hash: []byte(password)}
-	hash_string, err := utils.EncodeHashString(&ph)
-	if err != nil {
-		return nil, err
-	}
-	m.User = &models.User{Username: username, Password: hash_string}
+	m.User = &models.User{Username: username, Password: password}
 	m.Registered = true
 	return m.User, nil
 }
