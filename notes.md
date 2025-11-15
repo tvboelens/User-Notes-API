@@ -33,6 +33,27 @@
     - These should mostly be integration and end-to-end tests, the unit tests will stay in the packages itself for now.
 - perhaps `.env`, `docker-compose.yml` and Dockerfile.
 
+## Stories
+- user registers
+    - if everything ok user receives the jwt token and can start creating notes and do everything else
+    - if something is wrong with the password user receives an error that password must have certain form
+    - if username already exists user receives error with message that username already exists
+- user logs in
+    - if credentials correct user receives jwt token and can proceed
+    - if credentials incorrect user receives status unauthorized
+    - if username wrong/unknown user receives corresponding error
+- user wants to change password
+    - here needs to send old and new password
+    - login first using old password, then update password
+    - can either decide to let user login with new password or already logged in
+- changing username (if we want to allow it) using the same logic
+- Everything else always needs succesful login (non-expired jwt token)
+- User receives a list of all notes (maybe only ids) and as a next step can query a specific note (by id) to receive title and content
+    - these can only be their own notes
+    - if user tries to query a note that does not belong to them they get status unauthorized
+- User creates a note and after sending the request receives the id for later use
+- User queries a note, edits it and saves it via id
+
 ## Todo
 - [] Testing for Config
     - [] Missing values?
@@ -66,6 +87,11 @@
         - [x] Delete by id
     - [] Operations for multiple objects, i.e. allow arrays/slices of Users and Notes?
 - [] Error messaging
+    - [] custom error if username already exists
+    - [] custom error if password is empty (or handle it directly in the controller)
+- [] controllers
+    - [] password validation when registering?
+    - 
 - [] utils
     - [] encode hash string
     - [] parse hash string

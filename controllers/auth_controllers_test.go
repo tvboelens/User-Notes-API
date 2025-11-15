@@ -14,27 +14,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-/* func TestAuthControllerRegistrationSuccess(t *testing.T) {
+/*
+	1. username already exists
+	2. unknown error
+	3. empty password?
+*/
+
+func TestAuthControllerRegistrationSuccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	mockService := new(testutils.MockAuthService)
-	mockService.On("Register", mock.Anything, mock.credentials).
-		Return(tt.mockReturn.token, tt.mockReturn.err)
-
-	authController := controllers.NewAuthController
-
+	body := []byte(`{"username": "Alice", "password": "pwd"}`)
 	w := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(w)
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/login", bytes.NewBuffer(body))
+	c.Request.Header.Set("Content-Type", "application/json")
 
-	// set request and body here
+	mockLoginService := new(servicemocks.MockLoginService)
+	mockRegistrationService := new(servicemocks.MockRegistrationService)
+	mockRegistrationService.On("Register", c.Request.Context(), auth.Credentials{Username: "Alice", Password: "pwd"}).Return("jwt", nil)
 
-	authController.Register(ctx)
+	authController := NewAuthController(mockLoginService, mockRegistrationService)
 
-	// now here have to check that w has the right data
+	authController.Register(c)
 
-	mockService.AssertExpectations(t)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "jwt")
+	mockLoginService.AssertExpectations(t)
 
-} */
+}
 
 func TestAuthControllerLoginSuccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)

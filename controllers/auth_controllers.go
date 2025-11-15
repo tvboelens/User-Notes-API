@@ -20,10 +20,24 @@ func NewAuthController(login_service services.LoginServiceIfc, registration_serv
 	return &controller
 }
 
-/* func (a *AuthController) Register(c *gin.Context) {
+func (a *AuthController) Register(c *gin.Context) {
+	var credentials auth.Credentials
+	err := c.Bind(&credentials)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+		return
+	}
+
 	request_ctx := c.Request.Context()
 	token_string, err := a.RegistrationService.Register(request_ctx, credentials)
-} */
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"token": token_string})
+}
 
 func (a *AuthController) Login(c *gin.Context) {
 	var credentials auth.Credentials

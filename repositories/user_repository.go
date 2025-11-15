@@ -24,6 +24,10 @@ type UserRepository struct {
 	db *gorm.DB
 }
 
+func NewUserRepository(db *gorm.DB) *UserRepository {
+	return &UserRepository{db: db}
+}
+
 func (r *UserRepository) CreateUser(ctx context.Context, user *models.User) error {
 	result := gorm.WithResult()
 	err := gorm.G[models.User](r.db, result).Create(ctx, user)
