@@ -56,8 +56,8 @@ func (m *MockPwdHasher) GenerateHash(password, salt []byte) ([]byte, error) {
 	return password, nil
 }
 func (m *MockPwdHasher) GenerateSalt() ([]byte, error) {
-	var arr []byte
-	return arr, nil
+	salt := []byte("random_salt")
+	return salt, nil
 }
 func (m *MockPwdHasher) Compare(hash, salt, password []byte) (bool, error) {
 	return bytes.Equal(hash, password), nil
