@@ -2,8 +2,8 @@ package auth
 
 import (
 	"context"
-	//"errors"
 	"fmt"
+
 	"user-notes-api/repositories"
 	"user-notes-api/utils"
 )
@@ -34,7 +34,7 @@ func LoginUser(ctx context.Context, credentials *Credentials, user_reader reposi
 
 	p, err := utils.ParseHashString(user.Password)
 	if err != nil {
-		return false, fmt.Errorf("login user: could not parse hash string")
+		return false, fmt.Errorf("login user: could not parse hash string: %w", err)
 	}
 
 	isValid, err := pwd_comparer.Compare(p.Hash, p.Salt, []byte(credentials.Password))
@@ -44,19 +44,19 @@ func LoginUser(ctx context.Context, credentials *Credentials, user_reader reposi
 func RegisterUser(ctx context.Context, credentials *Credentials, user_creator repositories.UserCreator, pwd_hasher utils.PasswordHasher) error {
 	salt, err := pwd_hasher.GenerateSalt()
 	if err != nil {
-		return fmt.Errorf("register user: could not generate salt")
+		return fmt.Errorf("register user: could not generate salt: %w", err)
 	}
 
 	hash, err := pwd_hasher.GenerateHash([]byte(credentials.Password), salt)
 	if err != nil {
-		return fmt.Errorf("register user: could not generate hash")
+		return fmt.Errorf("register user: could not generate hash: %w", err)
 	}
 
 	p := utils.ParsedHashString{Id: "Argon2id", Version: 19, Hash: hash, Salt: salt}
 
 	hash_string, err := utils.EncodeHashString(&p)
 	if err != nil {
-		return fmt.Errorf("register user: failed to encode hash string")
+		return fmt.Errorf("register user: failed to encode hash string: %w", err)
 	}
 
 	_, err = user_creator.CreateUserByNameAndPassword(ctx, credentials.Username, hash_string)
