@@ -14,8 +14,8 @@ type Note struct {
 }
 
 type NoteReaderService interface {
-	getNotes(ctx context.Context, userId uint) ([]Note, error)
-	getNote(ctx context.Context, noteId uint, userId uint) (Note, error)
+	GetNotes(ctx context.Context, userId uint) ([]Note, error)
+	GetNote(ctx context.Context, noteId uint, userId uint) (Note, error)
 }
 
 type NoteModificationService interface {
@@ -83,7 +83,7 @@ func NewNoteService(note_reader repositories.NoteReader, note_creator repositori
 	return &note_service
 }
 
-func (s *NoteService) getNote(ctx context.Context, noteId uint, userId uint) (Note, error) {
+func (s *NoteService) GetNote(ctx context.Context, noteId uint, userId uint) (Note, error) {
 	note, err := s.NoteReader.FindNoteById(ctx, noteId)
 
 	if err != nil {
@@ -97,7 +97,7 @@ func (s *NoteService) getNote(ctx context.Context, noteId uint, userId uint) (No
 	return Note{Title: note.Title, Content: note.Body}, nil
 }
 
-func (s *NoteService) getNotes(ctx context.Context, userId uint) ([]Note, error) {
+func (s *NoteService) GetNotes(ctx context.Context, userId uint) ([]Note, error) {
 	var note_array []Note
 	notes, err := s.NoteReader.FindNotesByUserId(ctx, userId)
 	if err != nil {

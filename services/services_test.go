@@ -125,7 +125,7 @@ func TestNoteServiceGetNoteSuccess(t *testing.T) {
 	ctx := context.Background()
 	note_reader.On("FindNoteById", ctx, noteId).Return(&models.Note{UserID: 2, Title: "Title", Body: "Content"}, nil)
 
-	note, err := note_service.getNote(ctx, noteId, userId)
+	note, err := note_service.GetNote(ctx, noteId, userId)
 	assert.NoError(t, err)
 	assert.Equal(t, "Title", note.Title)
 	assert.Equal(t, "Content", note.Content)
@@ -143,7 +143,7 @@ func TestNoteServiceGetNoteWrongOwner(t *testing.T) {
 	ctx := context.Background()
 	note_reader.On("FindNoteById", ctx, noteId).Return(&models.Note{UserID: 1, Title: "Title", Body: "Content"}, nil)
 
-	_, err := note_service.getNote(ctx, noteId, userId)
+	_, err := note_service.GetNote(ctx, noteId, userId)
 	assert.Error(t, err)
 	var errWrongOwner *ErrorWrongOwner
 	assert.True(t, errors.As(err, &errWrongOwner))
@@ -161,8 +161,26 @@ func TestNoteServiceGetNoteNotFound(t *testing.T) {
 	ctx := context.Background()
 	note_reader.On("FindNoteById", ctx, noteId).Return(&models.Note{}, errors.New("note not found"))
 
-	_, err := note_service.getNote(ctx, noteId, userId)
+	_, err := note_service.GetNote(ctx, noteId, userId)
 	assert.Error(t, err)
 	var errNotFound *ErrorNoteNotFound
+	assert.True(t, errors.As(err, &errNotFound))
+}
+
+func TestNoteServiceCreateNoteUserNotFound(t *testing.T) {
+	note_reader := new(repositorymocks.NoteReaderMock)
+	note_creator := new(repositorymocks.NoteCreatorMock)
+	user_repo := new(repositorymocks.UserRepoMock)
+
+	note_service := NewNoteService(note_reader, note_creator, user_repo)
+
+	username := "Alice"
+	note := Note{Title: "title", Content: "content"}
+	ctx := context.Background()
+	user_repo.On("FindUserByName", ctx, username).Return(&models.User{}, errors.New("user not found"))
+
+	_, err := note_service.CreateNote(ctx, note, username)
+	assert.Error(t, err)
+	var errNotFound *ErrorUserNotFound
 	assert.True(t, errors.As(err, &errNotFound))
 }
