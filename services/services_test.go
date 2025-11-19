@@ -12,6 +12,7 @@ import (
 	"user-notes-api/auth"
 	"user-notes-api/models"
 	"user-notes-api/testing/testutils"
+	"user-notes-api/testing/testutils/repositorymocks"
 )
 
 func TestAuthServices(t *testing.T) {
@@ -110,4 +111,58 @@ func TestAuthServices(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Equal(t, 0, len(token_string))
+}
+
+func TestNoteServiceGetNoteSuccess(t *testing.T) {
+	note_reader := new(repositorymocks.NoteReaderMock)
+	note_creator := new(repositorymocks.NoteCreatorMock)
+	user_repo := new(repositorymocks.UserRepoMock)
+
+	note_service := NewNoteService(note_reader, note_creator, user_repo)
+
+	noteId := uint(1)
+	userId := uint(2)
+	ctx := context.Background()
+	note_reader.On("FindNoteById", ctx, noteId).Return(&models.Note{UserID: 2, Title: "Title", Body: "Content"}, nil)
+
+	note, err := note_service.getNote(ctx, noteId, userId)
+	assert.NoError(t, err)
+	assert.Equal(t, "Title", note.Title)
+	assert.Equal(t, "Content", note.Content)
+}
+
+func TestNoteServiceGetNoteWrongOwner(t *testing.T) {
+	note_reader := new(repositorymocks.NoteReaderMock)
+	note_creator := new(repositorymocks.NoteCreatorMock)
+	user_repo := new(repositorymocks.UserRepoMock)
+
+	note_service := NewNoteService(note_reader, note_creator, user_repo)
+
+	noteId := uint(1)
+	userId := uint(2)
+	ctx := context.Background()
+	note_reader.On("FindNoteById", ctx, noteId).Return(&models.Note{UserID: 1, Title: "Title", Body: "Content"}, nil)
+
+	_, err := note_service.getNote(ctx, noteId, userId)
+	assert.Error(t, err)
+	var errWrongOwner *ErrorWrongOwner
+	assert.True(t, errors.As(err, &errWrongOwner))
+}
+
+func TestNoteServiceGetNoteNotFound(t *testing.T) {
+	note_reader := new(repositorymocks.NoteReaderMock)
+	note_creator := new(repositorymocks.NoteCreatorMock)
+	user_repo := new(repositorymocks.UserRepoMock)
+
+	note_service := NewNoteService(note_reader, note_creator, user_repo)
+
+	noteId := uint(1)
+	userId := uint(2)
+	ctx := context.Background()
+	note_reader.On("FindNoteById", ctx, noteId).Return(&models.Note{}, errors.New("note not found"))
+
+	_, err := note_service.getNote(ctx, noteId, userId)
+	assert.Error(t, err)
+	var errNotFound *ErrorNoteNotFound
+	assert.True(t, errors.As(err, &errNotFound))
 }

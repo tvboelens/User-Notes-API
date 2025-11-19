@@ -31,12 +31,6 @@ type RegistrationService struct {
 	jwt_secret      string
 }
 
-type NoteService struct {
-	UserRepo    repositories.UserReader
-	NoteCreator repositories.NoteCreator
-	NoteReader  repositories.NoteReader
-}
-
 type ErrorWrongPassword struct {
 	Username string
 }
@@ -53,11 +47,6 @@ func NewLoginService(password_comparer utils.PasswordComparer, user_repo reposit
 func NewRegistrationService(password_hasher utils.PasswordHasher, user_repo repositories.UserCreator, jwt_secret string) *RegistrationService {
 	registration_service := RegistrationService{Password_hasher: password_hasher, User_repo: user_repo, jwt_secret: jwt_secret}
 	return &registration_service
-}
-
-func NewNoteService(note_reader repositories.NoteReader, note_creator repositories.NoteCreator, user_repo repositories.UserReader) *NoteService {
-	note_service := NoteService{NoteReader: note_reader, NoteCreator: note_creator, UserRepo: user_repo}
-	return &note_service
 }
 
 func (s *LoginService) Login(ctx context.Context, credentials auth.Credentials) (string, error) {
