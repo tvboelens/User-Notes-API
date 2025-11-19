@@ -1,13 +1,17 @@
 package repositories
 
-import "context"
-import "errors"
-import "fmt"
-import "gorm.io/gorm"
-import "user-notes-api/models"
+import (
+	"context"
+	"errors"
+	"fmt"
+	"user-notes-api/models"
+
+	"gorm.io/gorm"
+)
 
 type NoteReader interface {
 	FindNoteById(ctx context.Context, id uint) (*models.Note, error)
+	FindNotesByUserId(ctx context.Context, userId uint) (*[]models.Note, error)
 }
 
 type NoteCreator interface {
@@ -16,6 +20,10 @@ type NoteCreator interface {
 
 type NoteRepository struct {
 	db *gorm.DB
+}
+
+func NewNoteRepository(db *gorm.DB) *NoteRepository {
+	return &NoteRepository{db: db}
 }
 
 func (r *NoteRepository) CreateNote(ctx context.Context, note *models.Note) error {
@@ -28,9 +36,14 @@ func (r *NoteRepository) CreateNote(ctx context.Context, note *models.Note) erro
 	return tx.Error
 }
 
-func (r *NoteRepository) FindNoteById(ctx context.Context, id uint) (models.Note, error) {
+func (r *NoteRepository) FindNoteById(ctx context.Context, id uint) (*models.Note, error) {
 	note, err := gorm.G[models.Note](r.db).Where("id = ?", id).First(ctx)
-	return note, err
+	return &note, err
+}
+
+func (r *NoteRepository) FindNotesByUserId(ctx context.Context, userId uint) (*[]models.Note, error) {
+	notes, err := gorm.G[models.Note](r.db).Where("user_id = ?", userId).Find(ctx)
+	return &notes, err
 }
 
 func (r *NoteRepository) DeleteNote(ctx context.Context, note *models.Note) error {
