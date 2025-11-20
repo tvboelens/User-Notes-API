@@ -8,6 +8,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 
 	"user-notes-api/auth"
 	"user-notes-api/models"
@@ -165,6 +167,35 @@ func TestNoteServiceGetNoteNotFound(t *testing.T) {
 	assert.Error(t, err)
 	var errNotFound *ErrorNoteNotFound
 	assert.True(t, errors.As(err, &errNotFound))
+}
+
+func TestNoteServiceCreateNoteUser(t *testing.T) {
+	note_reader := new(repositorymocks.NoteReaderMock)
+	note_creator := new(repositorymocks.NoteCreatorMock)
+	user_repo := new(repositorymocks.UserRepoMock)
+
+	note_service := NewNoteService(note_reader, note_creator, user_repo)
+
+	username := "Alice"
+	password := "secret_password"
+	note := Note{Title: "title", Content: "content"}
+	ctx := context.Background()
+	user_repo.On("FindUserByName", ctx, username).
+		Return(&models.User{Model: gorm.Model{ID: 2}, Username: username, Password: password}, nil)
+
+	note_model := models.Note{User: models.User{Model: gorm.Model{ID: 2}, Username: username, Password: password},
+		UserID: 2, Title: note.Title, Body: note.Content}
+	note_creator.On("CreateNote", ctx, &note_model).
+		Run(func(args mock.Arguments) {
+			note := args.Get(1).(*models.Note)
+			note.ID = 4
+		}).
+		Return(nil)
+
+	id, err := note_service.CreateNote(ctx, note, username)
+	assert.NoError(t, err)
+	assert.Equal(t, uint(4), id)
+
 }
 
 func TestNoteServiceCreateNoteUserNotFound(t *testing.T) {

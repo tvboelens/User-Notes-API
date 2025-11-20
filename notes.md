@@ -96,8 +96,13 @@
 - [] services
     - [x] auth service
     - [] note service
-        - [] test read function
+        - [] test read functions
+            - [x] GetNote
+            - [] GetNotes
         - [] modifying functions
+            - [x] CreateNote
+            - [] Update
+            - [] Delete
 - [x] utils
     - [x] encode hash string
     - [x] parse hash string
