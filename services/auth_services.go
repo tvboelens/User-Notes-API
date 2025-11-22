@@ -11,6 +11,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type JwtClaims struct {
+	UserId uint `json:"user_id,omitempty"`
+	jwt.RegisteredClaims
+}
+
 type LoginServiceIfc interface {
 	Login(ctx context.Context, credentials auth.Credentials) (string, error)
 }
@@ -39,6 +44,10 @@ func (e *ErrorWrongPassword) Error() string {
 	return fmt.Sprintf("wrong password for user %q:", e.Username)
 }
 
+func (c *JwtClaims) GetUserId() (uint, error) {
+	return c.UserId, nil
+}
+
 func NewLoginService(password_comparer utils.PasswordComparer, user_repo repositories.UserReader, jwt_secret string) *LoginService {
 	login_service := LoginService{Password_comparer: password_comparer, User_repo: user_repo, jwt_secret: jwt_secret}
 	return &login_service
@@ -50,7 +59,7 @@ func NewRegistrationService(password_hasher utils.PasswordHasher, user_repo repo
 }
 
 func (s *LoginService) Login(ctx context.Context, credentials auth.Credentials) (string, error) {
-	isValid, err := auth.LoginUser(ctx, &credentials, s.User_repo, s.Password_comparer)
+	user_id, isValid, err := auth.LoginUser(ctx, &credentials, s.User_repo, s.Password_comparer)
 	if err != nil {
 		return "", err
 	}
@@ -60,11 +69,15 @@ func (s *LoginService) Login(ctx context.Context, credentials auth.Credentials) 
 		return "", &myErr
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer:    "auth.user-notes-api.local",
-		Subject:   credentials.Username,
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(4 * time.Hour)),
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, JwtClaims{
+		UserId: user_id,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "auth.user-notes-api.local",
+			Subject:   credentials.Username,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(4 * time.Hour)),
+		},
 	})
 
 	token_string, err := token.SignedString([]byte(s.jwt_secret))
@@ -73,17 +86,21 @@ func (s *LoginService) Login(ctx context.Context, credentials auth.Credentials) 
 }
 
 func (s *RegistrationService) Register(ctx context.Context, credentials auth.Credentials) (string, error) {
-	err := auth.RegisterUser(ctx, &credentials, s.User_repo, s.Password_hasher)
+	user_id, err := auth.RegisterUser(ctx, &credentials, s.User_repo, s.Password_hasher)
 
 	if err != nil {
 		return "", err
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		Issuer:    "auth.user-notes-api.local",
-		Subject:   credentials.Username,
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(4 * time.Hour)),
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, JwtClaims{
+		UserId: user_id,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "auth.user-notes-api.local",
+			Subject:   credentials.Username,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(4 * time.Hour)),
+		},
 	})
 
 	token_string, err := token.SignedString([]byte(s.jwt_secret))

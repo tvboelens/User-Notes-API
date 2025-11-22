@@ -24,22 +24,23 @@ func TestRegisterAndLogin(t *testing.T) {
 
 	// Get NotFoundError if user not registered
 	ctx := context.Background()
-	_, err := LoginUser(ctx, &creds, &repo, &pwd_hasher)
+	_, _, err := LoginUser(ctx, &creds, &repo, &pwd_hasher)
 	assert.Error(t, err)
 	var errNotFound *ErrorNotFound
 	assert.True(t, errors.As(err, &errNotFound))
 
-	err = RegisterUser(ctx, &creds, &repo, &pwd_hasher)
+	id, err := RegisterUser(ctx, &creds, &repo, &pwd_hasher)
 	assert.NoError(t, err)
+	assert.True(t, id > 0)
 
 	// Login succesful with correct credentials
-	logged_in, err := LoginUser(ctx, &creds, &repo, &pwd_hasher)
+	_, logged_in, err := LoginUser(ctx, &creds, &repo, &pwd_hasher)
 	assert.NoError(t, err)
 	assert.True(t, logged_in)
 
 	// Login unsuccesful with incorrect credentials
 	creds_wrong_pwd := Credentials{Username: username, Password: wrong_pwd}
-	isValid, err := LoginUser(ctx, &creds_wrong_pwd, &repo, &pwd_hasher)
+	_, isValid, err := LoginUser(ctx, &creds_wrong_pwd, &repo, &pwd_hasher)
 	assert.NoError(t, err)
 	assert.False(t, isValid)
 }

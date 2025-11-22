@@ -48,12 +48,12 @@ func TestAuthServices(t *testing.T) {
 	assert.True(t, len(token_string) > 0)
 
 	// check the claims in the token
-	token, err := jwt.Parse(token_string, func(token *jwt.Token) (any, error) {
+	token, err := jwt.ParseWithClaims(token_string, &JwtClaims{}, func(token *jwt.Token) (any, error) {
 		return []byte(jwt_secret), nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 	assert.NoError(t, err)
 
-	claims, ok := token.Claims.(jwt.MapClaims)
+	claims, ok := token.Claims.(*JwtClaims)
 	assert.True(t, ok)
 
 	issuer, err := claims.GetIssuer()
@@ -68,6 +68,10 @@ func TestAuthServices(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, time.Now().After(issuedAt.Time))
 
+	notBefore, err := claims.GetNotBefore()
+	assert.NoError(t, err)
+	assert.True(t, time.Now().After(notBefore.Time))
+
 	expirationTime, err := claims.GetExpirationTime()
 	assert.NoError(t, err)
 	assert.True(t, expirationTime.After(time.Now()))
@@ -78,12 +82,12 @@ func TestAuthServices(t *testing.T) {
 	assert.True(t, len(token_string) > 0)
 
 	// check the claims in the token
-	token, err = jwt.Parse(token_string, func(token *jwt.Token) (any, error) {
+	token, err = jwt.ParseWithClaims(token_string, &JwtClaims{}, func(token *jwt.Token) (any, error) {
 		return []byte(jwt_secret), nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 	assert.NoError(t, err)
 
-	claims, ok = token.Claims.(jwt.MapClaims)
+	claims, ok = token.Claims.(*JwtClaims)
 	assert.True(t, ok)
 
 	issuer, err = claims.GetIssuer()
@@ -97,6 +101,10 @@ func TestAuthServices(t *testing.T) {
 	issuedAt, err = claims.GetIssuedAt()
 	assert.NoError(t, err)
 	assert.True(t, time.Now().After(issuedAt.Time))
+
+	notBefore, err = claims.GetNotBefore()
+	assert.NoError(t, err)
+	assert.True(t, time.Now().After(notBefore.Time))
 
 	expirationTime, err = claims.GetExpirationTime()
 	assert.NoError(t, err)
