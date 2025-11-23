@@ -45,7 +45,7 @@ type ErrorWrongOwner struct {
 }
 
 func (e *ErrorUserNotFound) Error() string {
-	return fmt.Sprintf("user %q not found: %v", e.Username, e.Err)
+	return fmt.Sprintf("user %s not found: %v", e.Username, e.Err)
 }
 
 func (e *ErrorUserNotFound) Unwrap() error {

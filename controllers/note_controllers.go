@@ -23,7 +23,7 @@ func (n *NoteController) Create(c *gin.Context) {
 	err := c.Bind(&note)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input" + err.Error()})
 		return
 	}
 
@@ -43,7 +43,7 @@ func (n *NoteController) Create(c *gin.Context) {
 	id, err := n.ModificationService.CreateNote(request_ctx, note, uname)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"id": id})
