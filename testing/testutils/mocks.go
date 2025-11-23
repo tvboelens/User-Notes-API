@@ -7,6 +7,8 @@ import (
 
 	"user-notes-api/models"
 	"user-notes-api/utils"
+
+	"gorm.io/gorm"
 )
 
 type MockUserCreatorReader struct {
@@ -36,7 +38,7 @@ func (m *MockUserCreatorReader) CreateUserByNameAndPassword(ctx context.Context,
 		return nil, errors.New(msg)
 	}
 
-	m.User = &models.User{Username: username, Password: password}
+	m.User = &models.User{Username: username, Password: password, Model: gorm.Model{ID: 1}}
 	m.Registered = true
 	return m.User, nil
 }

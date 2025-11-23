@@ -67,11 +67,11 @@ func TestUserRepository(t *testing.T) {
 	assert.Equal(t, user.ID, user_read.ID)
 
 	// Error when trying to find non existent user
-	user_read, err = userRepo.FindUserByName(ctx, "Clint")
+	_, err = userRepo.FindUserByName(ctx, "Clint")
 	assert.Error(t, err)
 
 	id := max(user.ID, user2.ID) + 1
-	user_read, err = userRepo.FindUserById(ctx, id)
+	_, err = userRepo.FindUserById(ctx, id)
 	assert.Error(t, err)
 
 	// Update user
@@ -140,7 +140,22 @@ func TestNoteRepository(t *testing.T) {
 	assert.Equal(t, "Title1", note_read.Title)
 	assert.Equal(t, "body1", note_read.Body)
 	assert.Equal(t, note1.UserID, note_read.UserID)
+
+	// create second note
+	note2.UserID = user.ID
+	note2.User = user
+	err = noteRepo.CreateNote(ctx, &note2)
+	assert.NoError(t, err)
+
 	// Find all notes by one user
+	notes, err := noteRepo.FindNotesByUserId(ctx, user.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(*notes))
+	assert.Equal(t, note1.Title, (*notes)[0].Title)
+	assert.Equal(t, note1.Body, (*notes)[0].Body)
+	assert.Equal(t, note2.Title, (*notes)[1].Title)
+	assert.Equal(t, note2.Body, (*notes)[1].Body)
+
 	// Find by list of Ids?
 
 	// Update
@@ -151,12 +166,6 @@ func TestNoteRepository(t *testing.T) {
 
 	_, err = noteRepo.FindNoteById(ctx, id)
 	assert.Error(t, err)
-
-	// create second note
-	note2.UserID = user.ID
-	note2.User = user
-	err = noteRepo.CreateNote(ctx, &note2)
-	assert.NoError(t, err)
 
 	// Delete via note object
 	id = note2.ID

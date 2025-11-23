@@ -82,6 +82,7 @@
         - [x] When deleting user modify the name so that it can be reused
     - [] CRUD Notes
         - [x] Find by Id
+        - [x] implement and test FindNotesByUserId
         - [x] Create same as user
         - [] Update same as user
         - [x] Delete by id
@@ -92,9 +93,19 @@
 - [] controllers
     - [] password validation when registering?
     - 
-- [] utils
-    - [] encode hash string
-    - [] parse hash string
+- [] services
+    - [x] auth service
+    - [] note service
+        - [] test read functions
+            - [x] GetNote
+            - [] GetNotes
+        - [] modifying functions
+            - [x] CreateNote
+            - [] Update
+            - [] Delete
+- [x] utils
+    - [x] encode hash string
+    - [x] parse hash string
 - [x] auth
     - [x] Custom error when user not found
     - [x] testing
@@ -106,6 +117,17 @@
         - [x] Registration
             - [x] Login works after registration
             - [x] Before registration cannot login -> user not found error
+    - [] jwt
+        - [] encode user id in jwt?
+- [] controllers
+    - [x] auth controllers
+    - [] note controllers
+        - [] create note
+        - [] GET all notes
+        - [] GET specific note
+        - [] POST create note
+        - [] DELETE note
+        - [] PUT update note
             
 
 
