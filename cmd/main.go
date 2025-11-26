@@ -16,7 +16,7 @@ func main() {
 	cfg := config.LoadConfig()
 
 	dsn := "host=" + cfg.DBHost + " user=" + cfg.DBUser + " password=" + cfg.DBPassword + " dbname=" +
-		cfg.DBName + " port=" + cfg.DBPort + " sslmode=disable TimeZone=Europe/Berlin"
+		cfg.DBName + " port=" + cfg.DBPort + " sslmode=disable TimeZone=UTC"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect DB:", err)
