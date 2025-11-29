@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"net/http"
 	"user-notes-api/controllers"
 	"user-notes-api/middleware"
 	"user-notes-api/repositories"
@@ -25,6 +26,10 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, jwt_secret string) {
 
 	note_service := services.NewNoteService(note_repo, note_repo, user_repo)
 	note_controller := controllers.NewNoteController(note_service, note_service)
+
+	r.GET("/health", func(c *gin.Context) {
+		c.String(http.StatusOK, "ok")
+	})
 
 	auth_controller := controllers.NewAuthController(login_service, registration_service)
 	r.POST("/register", auth_controller.Register)

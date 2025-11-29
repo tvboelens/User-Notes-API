@@ -1,0 +1,19 @@
+on:
+    push:
+        branches: [main]
+jobs:
+    run_tests:
+        runs-on: ubuntu:latest
+        steps:
+            - uses: actions/checkout@v5
+      
+            - uses: actions/setup-go@v6
+              with:
+                go-version: '1.25'
+      
+            - run: docker-compose -f docker-compose.test.yml up --build -d
+
+            - name: Run E2E Tests
+              run: go test ./tests/e2e -v
+          
+            - run: docker-compose -f docker-compose.test.yml down -v
