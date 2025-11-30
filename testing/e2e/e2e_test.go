@@ -37,5 +37,5 @@ func TestRegisterLoginCreateNote(t *testing.T) {
 	}
 
 	id := callAuthPost(t, base_url, "/notes", token, body)
-	assert.True(t, len(id) > 0)
+	assert.True(t, id > 0)
 }

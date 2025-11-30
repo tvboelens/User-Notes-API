@@ -15,7 +15,7 @@ type JwtToken struct {
 }
 
 type IdField struct {
-	ID string `json:"id,string"`
+	ID uint `json:"id"`
 }
 
 func waitForServer(t *testing.T, baseUrl string) {
@@ -32,6 +32,7 @@ func waitForServer(t *testing.T, baseUrl string) {
 func callPost(t *testing.T, base_url string, path string, body []byte) string {
 	client := &http.Client{}
 	req, _ := http.NewRequest("POST", base_url+path, bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 
@@ -60,10 +61,11 @@ func callPost(t *testing.T, base_url string, path string, body []byte) string {
 	return token.Token
 }
 
-func callAuthPost(t *testing.T, base_url string, path string, jwt_token string, body []byte) string {
+func callAuthPost(t *testing.T, base_url string, path string, jwt_token string, body []byte) uint {
 	client := &http.Client{}
 	req, _ := http.NewRequest("POST", base_url+path, bytes.NewBuffer(body))
 	req.Header.Add("Authorization", "Bearer "+jwt_token)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 
@@ -73,6 +75,11 @@ func callAuthPost(t *testing.T, base_url string, path string, jwt_token string, 
 	}
 
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatal("Response code not OK: " + strconv.Itoa(resp.StatusCode))
+	}
+
 	resp_body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
