@@ -30,7 +30,10 @@ func TestAuthServices(t *testing.T) {
 	repo := testutils.MockUserCreatorReader{User: &user, Registered: false}
 	pwd_hasher := testutils.MockPwdHasher{Hash: []byte(password)}
 
-	login_service := NewLoginService(&pwd_hasher, &repo, jwt_secret)
+	login_manager := auth.LoginManager{UserReader: &repo, PwdComparer: &pwd_hasher}
+	registration_manager := auth.RegistrationManager{UserCreator: &repo, PwdHasher: &pwd_hasher}
+
+	login_service := NewLoginService(&login_manager, jwt_secret)
 
 	// Login fails if user does not exist and we get a NotFound error
 	token_string, err := login_service.Login(ctx, creds)
@@ -40,7 +43,7 @@ func TestAuthServices(t *testing.T) {
 	var errNotFound *auth.ErrorNotFound
 	assert.True(t, errors.As(err, &errNotFound))
 
-	registration_service := NewRegistrationService(&pwd_hasher, &repo, jwt_secret)
+	registration_service := NewRegistrationService(&registration_manager, jwt_secret)
 
 	// First registration succesful and jwt token is not empty
 	token_string, err = registration_service.Register(ctx, creds)
