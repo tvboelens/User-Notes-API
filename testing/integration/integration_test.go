@@ -22,7 +22,7 @@ type JwtToken struct {
 	Token string `json:"token"`
 }
 
-func TestAuthControllerRegistrationSuccess(t *testing.T) {
+func TestAuthControllerRegistrationAndLoginSuccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	jwt_secret := "jwt_secret"
@@ -64,7 +64,9 @@ func TestAuthControllerRegistrationSuccess(t *testing.T) {
 	token, err := jwt.ParseWithClaims(ttoken.Token, &services.JwtClaims{}, func(token *jwt.Token) (any, error) {
 		return []byte(jwt_secret), nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	claims, ok := token.Claims.(*services.JwtClaims)
 	assert.True(t, ok)
@@ -89,6 +91,50 @@ func TestAuthControllerRegistrationSuccess(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, expirationTime.After(time.Now()))
 
-	//authController.Login(c)
+	body = []byte(`{"username": "Alice", "password": "secret_pwd"}`)
+	w = httptest.NewRecorder()
+	c, _ = gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/login", bytes.NewBuffer(body))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	req_ctx = c.Request.Context()
+	login_manager.On("LoginUser", req_ctx, &auth.Credentials{Username: "Alice", Password: "secret_pwd"}).Return(1, true, nil)
+
+	authController.Login(c)
+
+	err = json.Unmarshal(body, &ttoken)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	token, err = jwt.ParseWithClaims(ttoken.Token, &services.JwtClaims{}, func(token *jwt.Token) (any, error) {
+		return []byte(jwt_secret), nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	claims, ok = token.Claims.(*services.JwtClaims)
+	assert.True(t, ok)
+
+	issuer, err = claims.GetIssuer()
+	assert.NoError(t, err)
+	assert.Equal(t, "auth.user-notes-api.local", issuer)
+
+	subject, err = claims.GetSubject()
+	assert.NoError(t, err)
+	assert.Equal(t, "Alice", subject)
+
+	issuedAt, err = claims.GetIssuedAt()
+	assert.NoError(t, err)
+	assert.True(t, time.Now().After(issuedAt.Time))
+
+	notBefore, err = claims.GetNotBefore()
+	assert.NoError(t, err)
+	assert.True(t, time.Now().After(notBefore.Time))
+
+	expirationTime, err = claims.GetExpirationTime()
+	assert.NoError(t, err)
+	assert.True(t, expirationTime.After(time.Now()))
 
 }
