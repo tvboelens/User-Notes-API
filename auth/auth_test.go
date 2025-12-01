@@ -19,28 +19,31 @@ func TestRegisterAndLogin(t *testing.T) {
 	creds := Credentials{Username: username, Password: password}
 
 	user := models.User{Username: username, Password: password}
-	repo := testutils.MockUserCreatorReader{User: &user, Registered: false}
-	pwd_hasher := testutils.MockPwdHasher{Hash: []byte(password)}
+	repo := &testutils.MockUserCreatorReader{User: &user, Registered: false}
+	pwd_hasher := &testutils.MockPwdHasher{Hash: []byte(password)}
+
+	login_manager := NewLoginManager(repo, pwd_hasher)
+	registration_manager := NewRegistrationManager(repo, pwd_hasher)
 
 	// Get NotFoundError if user not registered
 	ctx := context.Background()
-	_, _, err := LoginUser(ctx, &creds, &repo, &pwd_hasher)
+	_, _, err := login_manager.LoginUser(ctx, &creds)
 	assert.Error(t, err)
 	var errNotFound *ErrorNotFound
 	assert.True(t, errors.As(err, &errNotFound))
 
-	id, err := RegisterUser(ctx, &creds, &repo, &pwd_hasher)
+	id, err := registration_manager.RegisterUser(ctx, &creds)
 	assert.NoError(t, err)
 	assert.True(t, id > 0)
 
 	// Login succesful with correct credentials
-	_, logged_in, err := LoginUser(ctx, &creds, &repo, &pwd_hasher)
+	_, logged_in, err := login_manager.LoginUser(ctx, &creds)
 	assert.NoError(t, err)
 	assert.True(t, logged_in)
 
 	// Login unsuccesful with incorrect credentials
 	creds_wrong_pwd := Credentials{Username: username, Password: wrong_pwd}
-	_, isValid, err := LoginUser(ctx, &creds_wrong_pwd, &repo, &pwd_hasher)
+	_, isValid, err := login_manager.LoginUser(ctx, &creds_wrong_pwd)
 	assert.NoError(t, err)
 	assert.False(t, isValid)
 }

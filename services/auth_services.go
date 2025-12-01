@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 	"user-notes-api/auth"
-	"user-notes-api/repositories"
-	"user-notes-api/utils"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -25,15 +23,13 @@ type RegistrationServiceIfc interface {
 }
 
 type LoginService struct {
-	Password_comparer utils.PasswordComparer
-	User_repo         repositories.UserReader
-	jwt_secret        string
+	LoginManager auth.LoginManagerIfc
+	jwt_secret   string
 }
 
 type RegistrationService struct {
-	Password_hasher utils.PasswordHasher
-	User_repo       repositories.UserCreator
-	jwt_secret      string
+	RegistrationManager auth.RegistrationManagerIfc
+	jwt_secret          string
 }
 
 type ErrorWrongPassword struct {
@@ -48,18 +44,18 @@ func (c *JwtClaims) GetUserId() (uint, error) {
 	return c.UserId, nil
 }
 
-func NewLoginService(password_comparer utils.PasswordComparer, user_repo repositories.UserReader, jwt_secret string) *LoginService {
-	login_service := LoginService{Password_comparer: password_comparer, User_repo: user_repo, jwt_secret: jwt_secret}
+func NewLoginService(login_manager auth.LoginManagerIfc, jwt_secret string) *LoginService {
+	login_service := LoginService{LoginManager: login_manager, jwt_secret: jwt_secret}
 	return &login_service
 }
 
-func NewRegistrationService(password_hasher utils.PasswordHasher, user_repo repositories.UserCreator, jwt_secret string) *RegistrationService {
-	registration_service := RegistrationService{Password_hasher: password_hasher, User_repo: user_repo, jwt_secret: jwt_secret}
+func NewRegistrationService(registration_manager auth.RegistrationManagerIfc, jwt_secret string) *RegistrationService {
+	registration_service := RegistrationService{RegistrationManager: registration_manager, jwt_secret: jwt_secret}
 	return &registration_service
 }
 
 func (s *LoginService) Login(ctx context.Context, credentials auth.Credentials) (string, error) {
-	user_id, isValid, err := auth.LoginUser(ctx, &credentials, s.User_repo, s.Password_comparer)
+	user_id, isValid, err := s.LoginManager.LoginUser(ctx, &credentials)
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +82,7 @@ func (s *LoginService) Login(ctx context.Context, credentials auth.Credentials) 
 }
 
 func (s *RegistrationService) Register(ctx context.Context, credentials auth.Credentials) (string, error) {
-	user_id, err := auth.RegisterUser(ctx, &credentials, s.User_repo, s.Password_hasher)
+	user_id, err := s.RegistrationManager.RegisterUser(ctx, &credentials)
 
 	if err != nil {
 		return "", err

@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+	"user-notes-api/auth"
 	"user-notes-api/controllers"
 	"user-notes-api/middleware"
 	"user-notes-api/repositories"
@@ -20,11 +22,18 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, jwt_secret string) {
 	threads := uint8(runtime.GOMAXPROCS(0))
 	pwd_hasher := utils.Argon2IdHasher{Time: 1, SaltLen: 32, Memory: 64 * 1024, Threads: threads, KeyLen: 256}
 
-	login_service := services.NewLoginService(&pwd_hasher, user_repo, jwt_secret)
-	registration_service := services.NewRegistrationService(&pwd_hasher, user_repo, jwt_secret)
+	login_manager := auth.LoginManager{UserReader: user_repo, PwdComparer: &pwd_hasher}
+	registration_manager := auth.RegistrationManager{UserCreator: user_repo, PwdHasher: &pwd_hasher}
+
+	login_service := services.NewLoginService(&login_manager, jwt_secret)
+	registration_service := services.NewRegistrationService(&registration_manager, jwt_secret)
 
 	note_service := services.NewNoteService(note_repo, note_repo, user_repo)
 	note_controller := controllers.NewNoteController(note_service, note_service)
+
+	r.GET("/health", func(c *gin.Context) {
+		c.String(http.StatusOK, "ok")
+	})
 
 	auth_controller := controllers.NewAuthController(login_service, registration_service)
 	r.POST("/register", auth_controller.Register)
