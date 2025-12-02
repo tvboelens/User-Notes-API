@@ -117,17 +117,26 @@
         - [x] Registration
             - [x] Login works after registration
             - [x] Before registration cannot login -> user not found error
-    - [] jwt
-        - [] encode user id in jwt?
+    - [x] jwt
+        - [x] encode user id in jwt?
 - [] controllers
     - [x] auth controllers
     - [] note controllers
-        - [] create note
+        - [x] create note
         - [] GET all notes
         - [] GET specific note
         - [] POST create note
         - [] DELETE note
         - [] PUT update note
+- testing
+    - [] e2e
+        - [] Register/login/create flow
+        - [] two users, try to get/edit note of other user
+    - [] integration
+        - [] services and controllers
+        - [] services and repos
+        - [] auth service and registration/login manager?
+        - [] repos and models
             
 
 
@@ -174,37 +183,8 @@
     2. Logging
     3. Rate limiting?
     4. Panic/error recovery (handle service/handler panics/errors)
-    5. Request body parsing?
     6. Metrics?
 6. Controllers & Routes → HTTP layer.
 
-### Services
-1. Credentials struct (already defined in utils or auth)
-2. Login service
-    1. Should contain user repository and password comparer via DI (use constructor?)
-        1. Have two interfaces for different parts of the repository, could inject via pointers
-        2. Same for password comparer
-    2. Call auth.LoginUser
-    5. Generate JWT and return it
-    6. Return user id?
-3. Registration service
-    1. Inject pwd hasher and user repo (use constructor?).
-    2. Check if user already exists
-    2. Call utils.RegisterUser
-    3. Generate JWT and return it
-4. Note handling service
-    1. Fetch note ids, maybe with titles (usecase would be showing a list of notes by title + some metadata)
-    2. Fetch note contents by id
-    3. Save a new note
-    4. Edit (i.e. update) a note
-    5. Delete a note
-    6. Block a user from accessing notes of another user
-
-### Middleware
-1. auth middleware
-    1. Check if auth header and bearer present
-    2. Check the jwt validity and call next handler
-    3. Use gin context to pass claims to next handlers
-    4. If anything fails return status unauthorized
 
 

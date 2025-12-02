@@ -3,6 +3,7 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +18,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 )
+
+/*
+	1. Failed login/registration?
+	2. Creating note (no middleware)
+*/
 
 type JwtToken struct {
 	Token string `json:"token"`
@@ -136,5 +142,65 @@ func TestAuthControllerRegistrationAndLoginSuccess(t *testing.T) {
 	expirationTime, err = claims.GetExpirationTime()
 	assert.NoError(t, err)
 	assert.True(t, expirationTime.After(time.Now()))
+}
+
+func TestAuthControllerRegistrationAndLoginFailure(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	jwt_secret := "jwt_secret"
+
+	login_manager := new(authmocks.MockLoginManager)
+	registration_manager := new(authmocks.MockRegistrationManager)
+
+	login_service := services.NewLoginService(login_manager, jwt_secret)
+	registration_service := services.NewRegistrationService(registration_manager, jwt_secret)
+
+	authController := controllers.NewAuthController(login_service, registration_service)
+
+	body := []byte(`{"username": "Alice", "password": "secret_pwd"}`)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	req_ctx := c.Request.Context()
+	registration_manager.On("RegisterUser", req_ctx, &auth.Credentials{Username: "Alice", Password: "secret_pwd"}).Return(0, errors.New("user already exists"))
+
+	authController.Register(c)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "user already exists")
+	registration_manager.AssertExpectations(t)
+
+	w = httptest.NewRecorder()
+	c, _ = gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/login", bytes.NewBuffer(body))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	req_ctx = c.Request.Context()
+	login_manager.On("LoginUser", req_ctx, &auth.Credentials{Username: "Alice", Password: "secret_pwd"}).Return(0, false, nil)
+
+	authController.Login(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Contains(t, w.Body.String(), "wrong password")
+	login_manager.AssertExpectations(t)
+
+	body = []byte(`{"username": "Bob", "password": "secret_pwd"}`)
+
+	w = httptest.NewRecorder()
+	c, _ = gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("POST", "/login", bytes.NewBuffer(body))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	not_found_err := auth.ErrorNotFound{Username: "Bob", Err: errors.New("No user Bob")}
+	req_ctx = c.Request.Context()
+	login_manager.On("LoginUser", req_ctx, &auth.Credentials{Username: "Bob", Password: "secret_pwd"}).Return(0, false, &not_found_err)
+
+	authController.Login(c)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Contains(t, w.Body.String(), "user not found")
+	registration_manager.AssertExpectations(t)
 
 }
