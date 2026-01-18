@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"user-notes-api/services"
 
@@ -47,4 +48,53 @@ func (n *NoteController) Create(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"id": id})
+}
+
+func (n *NoteController) GetNotes(c *gin.Context) {
+	request_ctx := c.Request.Context()
+	user_id_string, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse user id from context"})
+		return
+	}
+
+	uid, err := strconv.Atoi(user_id_string.(string))
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to convert user id to uint"})
+		return
+	}
+
+	result, err := n.ReaderService.GetNotes(request_ctx, uint(uid))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "notes not found"})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (n *NoteController) GetSingleNote(c *gin.Context) {
+	request_ctx := c.Request.Context()
+	note_id_str := c.Param("id")
+	note_id, err := strconv.Atoi(note_id_str)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed id"})
+		return
+	}
+
+	uid, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse user id from context"})
+		return
+	}
+
+	user_id, ok := uid.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to convert user id to uint"})
+		return
+	}
+
+	note, err := n.ReaderService.GetNote(request_ctx, uint(note_id), user_id)
+	// TODO: explicit error handling if user tries to access note not belonging to them
+	c.JSON(http.StatusOK, note)
 }

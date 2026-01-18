@@ -35,9 +35,9 @@ func (m *MockRegistrationService) Register(ctx context.Context, credentials auth
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockNoteReaderService) GetNotes(ctx context.Context, userId uint) ([]services.Note, error) {
+func (m *MockNoteReaderService) GetNotes(ctx context.Context, userId uint) (services.GetNotesResult, error) {
 	args := m.Called(ctx, userId)
-	return args.Get(0).([]services.Note), args.Error(1)
+	return args.Get(0).(services.GetNotesResult), args.Error(1)
 }
 
 func (m *MockNoteReaderService) GetNote(ctx context.Context, noteId uint, userId uint) (services.Note, error) {

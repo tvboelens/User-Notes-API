@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNoteControllerSuccess(t *testing.T) {
+func TestNoteControllerCreateSuccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	note := services.Note{Title: "title", Content: "content"}
@@ -117,4 +117,40 @@ func TestNoteControllerCreatorServiceError(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.Contains(t, w.Body.String(), `user Alice not found`)
+}
+
+/*
+	1. success
+	2. wrong user
+	3. malformed id?
+	4. notes not found
+*/
+
+func TestNoteControllerGetNotesSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("GET", "/notes", nil)
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	c.Set("user_id", "1")
+
+	note_mod_service := new(servicemocks.MockNoteModificationService)
+	note_read_service := new(servicemocks.MockNoteReaderService)
+	note_controller := NewNoteController(note_mod_service, note_read_service)
+
+	req_ctx := c.Request.Context()
+	var notes services.GetNotesResult
+	notes.Result = append(notes.Result, services.NoteListResult{Id: 1, Title: "Title1"})
+	notes.Result = append(notes.Result, services.NoteListResult{Id: 2, Title: "Title2"})
+	note_read_service.On("GetNotes", req_ctx, uint(1)).Return(notes, nil)
+
+	note_controller.GetNotes(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), `"Id":1`)
+	assert.Contains(t, w.Body.String(), `"Title":"Title1"`)
+	assert.Contains(t, w.Body.String(), `"Id":2`)
+	assert.Contains(t, w.Body.String(), `"Title":"Title2"`)
 }

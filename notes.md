@@ -6,7 +6,7 @@
 - `controllers`
     - Business logic for HTTP requests
         - Handling incoming requests
-        - Talking to models
+        - Talking to services
         - Returning responses
 - `middlewares`
     - Authentication
@@ -17,11 +17,12 @@
     - Define the structures for DB, i.e. ORM mapping
 - `repositories`
     - Repository layer on top of models to prevent direct DB access.
+    - These implement the business DB logic, i.e. creating user.
 - `routes`
     - Register routes
     - Connect URL to controllers and applies middleware
 - `services`
-    - handle login and registration
+    - Business logic for login and registration via the repositories
     - handle notes
 - `utils`
     - Helper functions
@@ -57,17 +58,6 @@
 ## Todo
 - [] Testing for Config
     - [] Missing values?
-- [x] Testing for User model
-    - [x] Creation
-    - [x] Unique username (cannot create second user with same name)
-    - [x] Reading out user with specific name
-    - [x] Update
-    - [x] Delete
-    - [x] Preload Notes when fetching user
-- [x] Testing for Notes model
-    - [x] CRUD
-    - [x] List notes by user, maybe get User from Note
-    - [x] Try to create note for non existing user (may depend on the DB?)
 - [] Repository + testing
     - [] CRUD User
         - [x] Find by ID and name -> return user object
@@ -106,6 +96,33 @@
 - [x] utils
     - [x] encode hash string
     - [x] parse hash string
+- [] controllers
+    - [x] auth controllers
+    - [] note controllers
+        - [x] create note
+        - [] GET all notes
+        - [] GET specific note
+        - [] POST create note
+        - [] DELETE note
+        - [] PUT update note
+- testing
+    - [] e2e
+        - [X] Register/login/create flow
+        - [] two users, try to get/edit note of other user
+    - [] integration
+        - [] services and controllers
+            - [] auth service and registration/login manager
+                - [] registration and login succes
+                - [] login failure
+            - [] note controller + services
+                - [] Crud operations
+        - [] services and repos
+            - [] note service and note repo using in memory db
+            - [] auth service + user repo. 
+                - [] Registration
+                    - registration service call registration manager, which calls the repo and pwd hasher. Either do full flow with in memory db or mock away pwd hasher.
+                - [] Login: use in memory db and mock away the password component.
+        - [] repos and models with a real db (i.e. postgres)?
 - [x] auth
     - [x] Custom error when user not found
     - [x] testing
@@ -119,25 +136,17 @@
             - [x] Before registration cannot login -> user not found error
     - [x] jwt
         - [x] encode user id in jwt?
-- [] controllers
-    - [x] auth controllers
-    - [] note controllers
-        - [x] create note
-        - [] GET all notes
-        - [] GET specific note
-        - [] POST create note
-        - [] DELETE note
-        - [] PUT update note
-- testing
-    - [] e2e
-        - [] Register/login/create flow
-        - [] two users, try to get/edit note of other user
-    - [] integration
-        - [] services and controllers
-        - [] services and repos
-        - [] auth service and registration/login manager?
-        - [] repos and models
-            
+- [x] Testing for User model
+    - [x] Creation
+    - [x] Unique username (cannot create second user with same name)
+    - [x] Reading out user with specific name
+    - [x] Update
+    - [x] Delete
+    - [x] Preload Notes when fetching user
+- [x] Testing for Notes model
+    - [x] CRUD
+    - [x] List notes by user, maybe get User from Note
+    - [x] Try to create note for non existing user (may depend on the DB?)
 
 
 
@@ -185,6 +194,24 @@
     4. Panic/error recovery (handle service/handler panics/errors)
     6. Metrics?
 6. Controllers & Routes → HTTP layer.
+
+1. Error handling + error code normalization
+2. Input validation (go-playground/validator?)
+3. db migrations tool instead of gorm automigrate
+4. environment separation (configs for dev, test, production)
+5. logging
+6. rate limiting
+7. YAML file for API documentation
+8. Deployment setup
+9. Prometheus metrics?
+10. More security
+11. README
+12. Graceful shutdown
+13. Core functionality
+    1. Get notes
+    2. Update note
+    3. delete a note
+    4. modify user details (password)
 
 
 
