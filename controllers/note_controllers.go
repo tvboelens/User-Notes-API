@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 
 	"user-notes-api/services"
 
@@ -47,4 +49,62 @@ func (n *NoteController) Create(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"id": id})
+}
+
+func (n *NoteController) GetNotes(c *gin.Context) {
+	request_ctx := c.Request.Context()
+	uid, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse user id from context"})
+		return
+	}
+
+	user_id, ok := uid.(uint)
+
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to convert user id to uint"})
+		return
+	}
+
+	result, err := n.ReaderService.GetNotes(request_ctx, user_id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "notes not found"})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (n *NoteController) GetSingleNote(c *gin.Context) {
+	request_ctx := c.Request.Context()
+	note_id_str := c.Param("id")
+	note_id, err := strconv.Atoi(note_id_str)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed id"})
+		return
+	}
+
+	uid, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse user id from context"})
+		return
+	}
+
+	user_id, ok := uid.(uint)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed user id"})
+		return
+	}
+
+	note, err := n.ReaderService.GetNote(request_ctx, uint(note_id), user_id)
+	if err != nil {
+		var e *services.ErrorWrongOwner
+		if errors.As(err, &e) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		} else {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+	}
+	c.JSON(http.StatusOK, note)
 }

@@ -11,6 +11,10 @@ import (
 
 var base_url = "http://localhost:8080"
 
+/*
+1. Try to get note from other user
+2. Get Notes
+*/
 func TestRegisterLoginCreateNote(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e test in short mode.")
@@ -38,4 +42,7 @@ func TestRegisterLoginCreateNote(t *testing.T) {
 
 	id := callAuthPost(t, base_url, "/notes", token, body)
 	assert.True(t, id > 0)
+
+	note_resp := callGetSingleNote(t, base_url, id, token)
+	assert.Equal(t, note, note_resp)
 }

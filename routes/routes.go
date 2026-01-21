@@ -42,5 +42,7 @@ func SetupRoutes(r *gin.Engine, db *gorm.DB, jwt_secret string) {
 	auth := r.Group("/")
 	auth.Use(middleware.JwtMiddleware(jwt_secret))
 	auth.POST("/notes", note_controller.Create)
+	auth.GET("/notes", note_controller.GetNotes)
+	auth.GET("/notes/:id", note_controller.GetSingleNote)
 	// Todo: GET /notes, PUT /notes/:id, DELETE /notes/:id
 }

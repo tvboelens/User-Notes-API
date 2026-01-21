@@ -9,12 +9,21 @@ import (
 )
 
 type Note struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	Title   string `json:"Title"`
+	Content string `json:"Content"`
+}
+
+type NoteListResult struct {
+	Id    uint   `json:"Id"`
+	Title string `json:"Title"`
+}
+
+type GetNotesResult struct {
+	Result []NoteListResult `json:"Result"`
 }
 
 type NoteReaderService interface {
-	GetNotes(ctx context.Context, userId uint) ([]Note, error)
+	GetNotes(ctx context.Context, userId uint) (GetNotesResult, error)
 	GetNote(ctx context.Context, noteId uint, userId uint) (Note, error)
 }
 
@@ -97,8 +106,8 @@ func (s *NoteService) GetNote(ctx context.Context, noteId uint, userId uint) (No
 	return Note{Title: note.Title, Content: note.Body}, nil
 }
 
-func (s *NoteService) GetNotes(ctx context.Context, userId uint) ([]Note, error) {
-	var note_array []Note
+func (s *NoteService) GetNotes(ctx context.Context, userId uint) (GetNotesResult, error) {
+	var note_array GetNotesResult
 	notes, err := s.NoteReader.FindNotesByUserId(ctx, userId)
 	if err != nil {
 		return note_array, &ErrorNotesNotFound{UserId: userId, Err: err}
@@ -108,7 +117,7 @@ func (s *NoteService) GetNotes(ctx context.Context, userId uint) ([]Note, error)
 		if note.UserID != userId {
 			return note_array, &ErrorWrongOwner{NoteId: note.ID, UserId: userId}
 		}
-		note_array = append(note_array, Note{Title: note.Title, Content: note.Body})
+		note_array.Result = append(note_array.Result, NoteListResult{Id: note.ID, Title: note.Title})
 	}
 	return note_array, nil
 }
