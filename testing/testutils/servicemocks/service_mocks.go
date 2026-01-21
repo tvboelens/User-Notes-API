@@ -41,7 +41,7 @@ func (m *MockNoteReaderService) GetNotes(ctx context.Context, userId uint) (serv
 }
 
 func (m *MockNoteReaderService) GetNote(ctx context.Context, noteId uint, userId uint) (services.Note, error) {
-	args := m.Called(ctx, userId)
+	args := m.Called(ctx, noteId, userId)
 	return args.Get(0).(services.Note), args.Error(1)
 }
 

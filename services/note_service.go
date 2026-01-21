@@ -9,8 +9,8 @@ import (
 )
 
 type Note struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	Title   string `json:"Title"`
+	Content string `json:"Content"`
 }
 
 type NoteListResult struct {

@@ -3,6 +3,7 @@ package controllers
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -119,13 +120,6 @@ func TestNoteControllerCreatorServiceError(t *testing.T) {
 	assert.Contains(t, w.Body.String(), `user Alice not found`)
 }
 
-/*
-	1. success
-	2. wrong user
-	3. malformed id?
-	4. notes not found
-*/
-
 func TestNoteControllerGetNotesSuccess(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -153,4 +147,101 @@ func TestNoteControllerGetNotesSuccess(t *testing.T) {
 	assert.Contains(t, w.Body.String(), `"Title":"Title1"`)
 	assert.Contains(t, w.Body.String(), `"Id":2`)
 	assert.Contains(t, w.Body.String(), `"Title":"Title2"`)
+}
+
+func TestNoteControllerGetSingleNoteSuccess(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("GET", "/notes/1", nil)
+	c.Params = append(c.Params, gin.Param{Key: "id", Value: "1"})
+	c.Set("user_id", "1")
+
+	note_mod_service := new(servicemocks.MockNoteModificationService)
+	note_read_service := new(servicemocks.MockNoteReaderService)
+	note_controller := NewNoteController(note_mod_service, note_read_service)
+
+	req_ctx := c.Request.Context()
+	note := services.Note{Title: "Test title", Content: "Test content"}
+	note_read_service.On("GetNote", req_ctx, uint(1), uint(1)).Return(note, nil)
+
+	note_controller.GetSingleNote(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), `"Title":"Test title"`)
+	assert.Contains(t, w.Body.String(), `"Content":"Test content"`)
+}
+
+func TestNoteControllerGetSingleNoteWrongUser(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("GET", "/notes/1", nil)
+	c.Params = append(c.Params, gin.Param{Key: "id", Value: "1"})
+	c.Set("user_id", "1")
+
+	note_mod_service := new(servicemocks.MockNoteModificationService)
+	note_read_service := new(servicemocks.MockNoteReaderService)
+	note_controller := NewNoteController(note_mod_service, note_read_service)
+
+	req_ctx := c.Request.Context()
+	note := services.Note{}
+	e := services.ErrorWrongOwner{UserId: 1, NoteId: 1}
+	note_read_service.On("GetNote", req_ctx, uint(1), uint(1)).Return(note, &e)
+
+	note_controller.GetSingleNote(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Contains(t, w.Body.String(), "does not own note")
+}
+
+func TestNoteControllerGetSingleNoteNotFound(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("GET", "/notes/1", nil)
+	c.Params = append(c.Params, gin.Param{Key: "id", Value: "1"})
+	c.Set("user_id", "1")
+
+	note_mod_service := new(servicemocks.MockNoteModificationService)
+	note_read_service := new(servicemocks.MockNoteReaderService)
+	note_controller := NewNoteController(note_mod_service, note_read_service)
+
+	req_ctx := c.Request.Context()
+	note := services.Note{}
+	e := services.ErrorNoteNotFound{NoteId: 1}
+	note_read_service.On("GetNote", req_ctx, uint(1), uint(1)).Return(note, &e)
+
+	note_controller.GetSingleNote(c)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Contains(t, w.Body.String(), "not found")
+}
+
+func TestNoteControllerGetNotesNotesNotFound(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request, _ = http.NewRequest("GET", "/notes", nil)
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	c.Set("user_id", "1")
+
+	note_mod_service := new(servicemocks.MockNoteModificationService)
+	note_read_service := new(servicemocks.MockNoteReaderService)
+	note_controller := NewNoteController(note_mod_service, note_read_service)
+
+	req_ctx := c.Request.Context()
+	var notes services.GetNotesResult
+	e := services.ErrorNotesNotFound{UserId: 1, Err: errors.New("user not found")}
+	note_read_service.On("GetNotes", req_ctx, uint(1)).Return(notes, &e)
+
+	note_controller.GetNotes(c)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Contains(t, w.Body.String(), "error")
 }

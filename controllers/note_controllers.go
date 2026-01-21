@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -54,14 +55,14 @@ func (n *NoteController) GetNotes(c *gin.Context) {
 	request_ctx := c.Request.Context()
 	user_id_string, ok := c.Get("user_id")
 	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse user id from context"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse user id from context"})
 		return
 	}
 
 	uid, err := strconv.Atoi(user_id_string.(string))
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to convert user id to uint"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to convert user id to uint"})
 		return
 	}
 
@@ -82,19 +83,29 @@ func (n *NoteController) GetSingleNote(c *gin.Context) {
 		return
 	}
 
-	uid, ok := c.Get("user_id")
+	uid_str, ok := c.Get("user_id")
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse user id from context"})
 		return
 	}
 
-	user_id, ok := uid.(uint)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to convert user id to uint"})
+	uid, err := strconv.Atoi(uid_str.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed user id"})
 		return
 	}
+	user_id := uint(uid)
 
 	note, err := n.ReaderService.GetNote(request_ctx, uint(note_id), user_id)
-	// TODO: explicit error handling if user tries to access note not belonging to them
+	if err != nil {
+		var e *services.ErrorWrongOwner
+		if errors.As(err, &e) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		} else {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+	}
 	c.JSON(http.StatusOK, note)
 }
