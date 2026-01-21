@@ -128,7 +128,7 @@ func TestNoteControllerGetNotesSuccess(t *testing.T) {
 	c.Request, _ = http.NewRequest("GET", "/notes", nil)
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	c.Set("user_id", "1")
+	c.Set("user_id", uint(1))
 
 	note_mod_service := new(servicemocks.MockNoteModificationService)
 	note_read_service := new(servicemocks.MockNoteReaderService)
@@ -156,7 +156,7 @@ func TestNoteControllerGetSingleNoteSuccess(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request, _ = http.NewRequest("GET", "/notes/1", nil)
 	c.Params = append(c.Params, gin.Param{Key: "id", Value: "1"})
-	c.Set("user_id", "1")
+	c.Set("user_id", uint(1))
 
 	note_mod_service := new(servicemocks.MockNoteModificationService)
 	note_read_service := new(servicemocks.MockNoteReaderService)
@@ -180,7 +180,7 @@ func TestNoteControllerGetSingleNoteWrongUser(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request, _ = http.NewRequest("GET", "/notes/1", nil)
 	c.Params = append(c.Params, gin.Param{Key: "id", Value: "1"})
-	c.Set("user_id", "1")
+	c.Set("user_id", uint(1))
 
 	note_mod_service := new(servicemocks.MockNoteModificationService)
 	note_read_service := new(servicemocks.MockNoteReaderService)
@@ -204,7 +204,7 @@ func TestNoteControllerGetSingleNoteNotFound(t *testing.T) {
 	c, _ := gin.CreateTestContext(w)
 	c.Request, _ = http.NewRequest("GET", "/notes/1", nil)
 	c.Params = append(c.Params, gin.Param{Key: "id", Value: "1"})
-	c.Set("user_id", "1")
+	c.Set("user_id", uint(1))
 
 	note_mod_service := new(servicemocks.MockNoteModificationService)
 	note_read_service := new(servicemocks.MockNoteReaderService)
@@ -229,7 +229,7 @@ func TestNoteControllerGetNotesNotesNotFound(t *testing.T) {
 	c.Request, _ = http.NewRequest("GET", "/notes", nil)
 	c.Request.Header.Set("Content-Type", "application/json")
 
-	c.Set("user_id", "1")
+	c.Set("user_id", uint(1))
 
 	note_mod_service := new(servicemocks.MockNoteModificationService)
 	note_read_service := new(servicemocks.MockNoteReaderService)

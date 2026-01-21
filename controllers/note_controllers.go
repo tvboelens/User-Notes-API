@@ -53,20 +53,20 @@ func (n *NoteController) Create(c *gin.Context) {
 
 func (n *NoteController) GetNotes(c *gin.Context) {
 	request_ctx := c.Request.Context()
-	user_id_string, ok := c.Get("user_id")
+	uid, ok := c.Get("user_id")
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse user id from context"})
 		return
 	}
 
-	uid, err := strconv.Atoi(user_id_string.(string))
+	user_id, ok := uid.(uint)
 
-	if err != nil {
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to convert user id to uint"})
 		return
 	}
 
-	result, err := n.ReaderService.GetNotes(request_ctx, uint(uid))
+	result, err := n.ReaderService.GetNotes(request_ctx, user_id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "notes not found"})
 		return
@@ -83,18 +83,17 @@ func (n *NoteController) GetSingleNote(c *gin.Context) {
 		return
 	}
 
-	uid_str, ok := c.Get("user_id")
+	uid, ok := c.Get("user_id")
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to parse user id from context"})
 		return
 	}
 
-	uid, err := strconv.Atoi(uid_str.(string))
-	if err != nil {
+	user_id, ok := uid.(uint)
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "malformed user id"})
 		return
 	}
-	user_id := uint(uid)
 
 	note, err := n.ReaderService.GetNote(request_ctx, uint(note_id), user_id)
 	if err != nil {
