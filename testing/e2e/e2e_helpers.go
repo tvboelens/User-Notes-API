@@ -97,7 +97,7 @@ func callAuthPost(t *testing.T, base_url string, path string, jwt_token string, 
 	return id_field.ID
 }
 
-func callGetSingleNote(t *testing.T, base_url string, note_id uint, jwt_token string) services.Note {
+func callGetSingleNote(t *testing.T, base_url string, note_id uint, jwt_token string) (services.Note, int) {
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", base_url+"/notes/"+strconv.Itoa(int(note_id)), nil)
 	req.Header.Add("Authorization", "Bearer "+jwt_token)
@@ -112,7 +112,7 @@ func callGetSingleNote(t *testing.T, base_url string, note_id uint, jwt_token st
 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		t.Fatal("Response code not OK: " + strconv.Itoa(resp.StatusCode))
+		return services.Note{}, resp.StatusCode
 	}
 	resp_body, err := io.ReadAll(resp.Body)
 
@@ -128,5 +128,5 @@ func callGetSingleNote(t *testing.T, base_url string, note_id uint, jwt_token st
 		t.Fatal(err)
 	} */
 
-	return note
+	return note, http.StatusOK
 }
