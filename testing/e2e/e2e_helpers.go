@@ -3,7 +3,6 @@ package e2e
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -102,7 +101,6 @@ func callGetSingleNote(t *testing.T, base_url string, note_id uint, jwt_token st
 	req, _ := http.NewRequest("GET", base_url+"/notes/"+strconv.Itoa(int(note_id)), nil)
 	req.Header.Add("Authorization", "Bearer "+jwt_token)
 
-	fmt.Println("URL" + base_url + "/notes/" + strconv.Itoa(int(note_id)))
 	resp, err := client.Do(req)
 
 	if err != nil {
@@ -120,13 +118,42 @@ func callGetSingleNote(t *testing.T, base_url string, note_id uint, jwt_token st
 		t.Fatal(err)
 	}
 
-	fmt.Println("BODY: " + string(resp_body))
-
 	var note services.Note
 	err = json.Unmarshal(resp_body, &note)
-	/* if err != nil {
+	if err != nil {
 		t.Fatal(err)
-	} */
+	}
 
 	return note, http.StatusOK
+}
+
+func callGetNotes(t *testing.T, base_url string, jwt_token string) services.GetNotesResult {
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", base_url+"/notes/", nil)
+	req.Header.Add("Authorization", "Bearer "+jwt_token)
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		resp.Body.Close()
+		t.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatal("Response code not OK: " + strconv.Itoa(resp.StatusCode))
+	}
+	resp_body, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var note_result services.GetNotesResult
+	err = json.Unmarshal(resp_body, &note_result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return note_result
 }
